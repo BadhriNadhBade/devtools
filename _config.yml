@@ -1,0 +1,49 @@
+title:            DevTools
+description:      Small developer tools that run entirely in your browser. Nothing you type ever leaves the page.
+url:              https://devtools.badhrinadh.com
+timezone:         America/Chicago
+sass:
+  sass_dir: assets/css
+  style: :compressed
+
+# Collections keep the root clear. Jekyll ignores any directory starting with
+# an underscore unless it is declared here, and every document in these three
+# sets its own `permalink`, so where a file lives on disk has no bearing on
+# the URL it is served at.
+collections:
+  # Every tool. The single source of truth: the index page, the search filter
+  # and the tool pages themselves are all generated from it, so adding a tool
+  # means adding one file.
+  tools:
+    output: true
+  # Standalone pages — the colophon, the accessibility statement, 404.
+  pages:
+    output: true
+  # Machine-readable files that have to be served from fixed paths.
+  meta:
+    output: true
+
+i18n:
+  en-US:
+    accessibility: Accessibility statement
+    source: View source
+    colophon: Colophon
+    home: badhrinadh.com
+
+# Order the categories appear in on the index. Not called `categories` because
+# Jekyll already owns `site.categories` for post categories.
+tool_categories:
+  - Encoding
+  - Text
+
+markdown: CommonMarkGhPages
+commonmark:
+  options: ["UNSAFE", "HARDBREAKS"]
+  extensions: ["strikethrough", "autolink", "table"]
+
+exclude:
+  - README.md
+  - start
+  - Gemfile
+  - Gemfile.lock
+  - vendor

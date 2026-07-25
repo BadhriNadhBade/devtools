@@ -1,0 +1,41 @@
+---
+layout: tool
+title: Base64 Encoder / Decoder
+slug: base64-encoder-decoder
+permalink: /base64-encoder-decoder
+category: Encoding
+description: Encode text to Base64 or decode it back. Handles UTF-8 correctly and speaks the URL-safe alphabet.
+keywords: base64 b64 encode decode btoa atob url-safe
+---
+
+<div class="tool-controls">
+  <div class="tool-seg" role="radiogroup" aria-label="Mode">
+    <input type="radio" name="mode" id="mode-encode" value="encode" checked>
+    <label for="mode-encode">Encode</label>
+    <input type="radio" name="mode" id="mode-decode" value="decode">
+    <label for="mode-decode">Decode</label>
+  </div>
+
+  <label class="tool-check">
+    <input type="checkbox" id="urlsafe">
+    URL-safe
+  </label>
+</div>
+
+<div class="tool-panes">
+  <div class="tool-pane">
+    <div class="tool-pane-head">
+      <span class="tool-label monospace" id="input-label">Plain text</span>
+      <button type="button" class="tool-button--ghost monospace" id="sample">Sample</button>
+    </div>
+    <textarea class="tool-area" id="input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="input-label"></textarea>
+  </div>
+
+  <div class="tool-pane">
+    <div class="tool-pane-head">
+      <span class="tool-label monospace" id="output-label">Base64</span>
+      <button type="button" class="tool-button--ghost monospace" id="copy">Copy</button>
+    </div>
+    <textarea class="tool-area" id="output" readonly spellcheck="false" aria-labelledby="output-label"></textarea>
+  </div>
+</div>

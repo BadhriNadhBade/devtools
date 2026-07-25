@@ -1,0 +1,52 @@
+---
+title: DevTools
+layout: default
+root: true
+description: Small developer tools that run entirely in your browser. Nothing you type ever leaves the page.
+---
+
+<p>
+  The handful of developer tools I reach for often enough to want a permanent home for. Each one runs entirely in your browser — no uploads, no accounts, no analytics.
+</p>
+
+<div class="tool-search">
+  <label class="tool-label monospace" for="search">Filter</label>
+  <input type="search" class="tool-text" id="search" placeholder="base64, regex, uuid…" autocomplete="off" autocapitalize="off" spellcheck="false">
+</div>
+
+<p class="tool-empty" id="empty" hidden>Nothing matches that.</p>
+
+{% comment %}
+  Both the index and the pages themselves come from the _tools collection, so
+  a new tool shows up here the moment its file exists.
+{% endcomment %}
+{% for category in site.tool_categories %}
+  {% assign tools = site.tools | where: "category", category | sort: "title" %}
+  {% if tools.size > 0 %}
+    <section class="tool-category" data-category>
+      <h2 class="normal-heading">{{ category }}</h2>
+      <ul class="tool-list">
+        {% for tool in tools %}
+          {% comment %}
+            Title, keywords and description all go into the haystack, lowercased
+            here so the filter can compare against a lowercased query without
+            depending on how any one tool happened to write its keywords.
+          {% endcomment %}
+          {% capture haystack %}{{ tool.title }} {{ tool.keywords }} {{ tool.description }}{% endcapture %}
+          <li data-search="{{ haystack | downcase | escape }}">
+            <a href="{{ tool.url }}">{{ tool.title }}</a>
+            <div class="desc">{{ tool.description }}</div>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+{% endfor %}
+
+<hr class="hr">
+
+<p class="desc">
+  Ported from <a href="https://github.com/dathoangnd/truedevtools.com">True Devtools</a> by Dat Hoang (MIT), rebuilt as plain HTML and JavaScript to match the rest of this site. More detail in the <a href="/colophon">colophon</a>.
+</p>
+
+<script type="module" src="/assets/js/index.js"></script>

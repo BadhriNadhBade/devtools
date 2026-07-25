@@ -1,0 +1,55 @@
+---
+layout: tool
+title: Text Diff Checker
+slug: text-diff-checker
+permalink: /text-diff-checker
+category: Text
+description: Compare two blocks of text line by line or word by word and see exactly what changed.
+keywords: diff compare text difference changes merge
+---
+
+<div class="tool-controls">
+  <div class="tool-seg" role="radiogroup" aria-label="Granularity">
+    <input type="radio" name="granularity" id="granularity-lines" value="lines" checked>
+    <label for="granularity-lines">By line</label>
+    <input type="radio" name="granularity" id="granularity-words" value="words">
+    <label for="granularity-words">By word</label>
+  </div>
+
+  <label class="tool-check">
+    <input type="checkbox" id="ignore-case">
+    Ignore case
+  </label>
+
+  <label class="tool-check">
+    <input type="checkbox" id="ignore-whitespace">
+    Ignore whitespace
+  </label>
+
+  <button type="button" class="tool-button--ghost monospace" id="sample">Sample</button>
+  <button type="button" class="tool-button--ghost monospace" id="swap">Swap sides</button>
+</div>
+
+<div class="tool-panes">
+  <div class="tool-pane">
+    <div class="tool-pane-head">
+      <span class="tool-label monospace" id="original-label">Original</span>
+    </div>
+    <textarea class="tool-area" id="original" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="original-label"></textarea>
+  </div>
+
+  <div class="tool-pane">
+    <div class="tool-pane-head">
+      <span class="tool-label monospace" id="changed-label">Changed</span>
+    </div>
+    <textarea class="tool-area" id="changed" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="changed-label"></textarea>
+  </div>
+</div>
+
+<div class="tool-pane" style="margin-top: 1.5em">
+  <div class="tool-pane-head">
+    <span class="tool-label monospace" id="diff-label">Difference</span>
+    <span class="tool-label monospace" id="summary"></span>
+  </div>
+  <pre class="tool-out tool-diff" id="diff" aria-labelledby="diff-label"></pre>
+</div>

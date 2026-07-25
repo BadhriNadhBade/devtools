@@ -1,0 +1,21 @@
+---
+permalink: /sitemap.xml
+layout: null
+---
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>{{ site.url }}/</loc>
+  </url>
+  {% for tool in site.tools %}
+  <url>
+    <loc>{{ site.url }}{{ tool.url }}</loc>
+  </url>
+  {% endfor %}
+  <url>
+    <loc>{{ site.url }}/colophon</loc>
+  </url>
+  <url>
+    <loc>{{ site.url }}/accessibility-statement</loc>
+  </url>
+</urlset>

@@ -1,0 +1,55 @@
+---
+layout: tool
+title: List Sorter / Randomizer
+slug: list-sorter-randomizer
+permalink: /list-sorter-randomizer
+category: Text
+description: Sort a list of lines alphabetically or by length, reverse it, shuffle it, or strip the duplicates out.
+keywords: sort list lines alphabetical shuffle randomize deduplicate unique reverse
+---
+
+<div class="tool-controls">
+  <div class="tool-seg" role="radiogroup" aria-label="Order">
+    <input type="radio" name="order" id="order-ascending" value="ascending" checked>
+    <label for="order-ascending">A–Z</label>
+    <input type="radio" name="order" id="order-descending" value="descending">
+    <label for="order-descending">Z–A</label>
+    <input type="radio" name="order" id="order-length" value="length">
+    <label for="order-length">Length</label>
+    <input type="radio" name="order" id="order-reversed" value="reversed">
+    <label for="order-reversed">Reverse</label>
+    <input type="radio" name="order" id="order-random" value="random">
+    <label for="order-random">Shuffle</label>
+  </div>
+
+  <button type="button" class="tool-button--ghost monospace" id="sample">Sample</button>
+</div>
+
+<div class="tool-controls">
+  <label class="tool-check"><input type="checkbox" id="unique"> Remove duplicates</label>
+  <label class="tool-check"><input type="checkbox" id="trim" checked> Trim each line</label>
+  <label class="tool-check"><input type="checkbox" id="drop-empty" checked> Drop blank lines</label>
+  <label class="tool-check"><input type="checkbox" id="ignore-case"> Ignore case when sorting</label>
+  <label class="tool-check"><input type="checkbox" id="natural" checked> Natural number order</label>
+</div>
+
+<div class="tool-panes">
+  <div class="tool-pane">
+    <div class="tool-pane-head">
+      <span class="tool-label monospace" id="input-label">Input</span>
+      <span class="tool-label monospace" id="input-count"></span>
+    </div>
+    <textarea class="tool-area" id="input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="input-label"></textarea>
+  </div>
+
+  <div class="tool-pane">
+    <div class="tool-pane-head">
+      <span class="tool-label monospace" id="output-label">Output</span>
+      <span class="tool-row">
+        <span class="tool-label monospace" id="output-count"></span>
+        <button type="button" class="tool-button--ghost monospace" id="copy">Copy</button>
+      </span>
+    </div>
+    <textarea class="tool-area" id="output" readonly spellcheck="false" aria-labelledby="output-label"></textarea>
+  </div>
+</div>

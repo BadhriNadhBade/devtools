@@ -1,0 +1,72 @@
+---
+layout: tool
+title: Regex Tester
+slug: regex-tester
+permalink: /regex-tester
+category: Text
+description: Try a regular expression against sample text and see every match, its position and its capture groups as you type.
+keywords: regex regexp regular expression match test pattern groups
+---
+
+<div class="tool-field">
+  <label class="tool-label monospace" for="pattern">Pattern</label>
+  <input type="text" class="tool-text tool-text--mono" id="pattern" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="\w+@\w+\.\w+">
+</div>
+
+<div class="tool-controls" style="margin-top: 1em">
+  <span class="tool-label monospace">Flags</span>
+  <label class="tool-check"><input type="checkbox" class="flag" value="g" checked> <span class="monospace">g</span> global</label>
+  <label class="tool-check"><input type="checkbox" class="flag" value="i"> <span class="monospace">i</span> ignore case</label>
+  <label class="tool-check"><input type="checkbox" class="flag" value="m"> <span class="monospace">m</span> multiline</label>
+  <label class="tool-check"><input type="checkbox" class="flag" value="s"> <span class="monospace">s</span> dot matches newline</label>
+  <label class="tool-check"><input type="checkbox" class="flag" value="u"> <span class="monospace">u</span> unicode</label>
+  <button type="button" class="tool-button--ghost monospace" id="sample">Sample</button>
+</div>
+
+<div class="tool-pane" style="margin-top: 1.5em">
+  <div class="tool-pane-head">
+    <span class="tool-label monospace" id="input-label">Test text</span>
+    <span class="tool-label monospace" id="count"></span>
+  </div>
+  <textarea class="tool-area tool-area--short" id="input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="input-label"></textarea>
+</div>
+
+<div class="tool-pane" style="margin-top: 1.5em">
+  <div class="tool-pane-head">
+    <span class="tool-label monospace" id="highlight-label">Matches in context</span>
+  </div>
+  <pre class="tool-out tool-out--wrap" id="highlight" aria-labelledby="highlight-label"></pre>
+</div>
+
+<div class="tool-pane" style="margin-top: 1.5em">
+  <div class="tool-pane-head">
+    <span class="tool-label monospace" id="matches-label">Match list</span>
+  </div>
+  <div id="matches" aria-labelledby="matches-label"></div>
+</div>
+
+<details style="margin-top: 2em">
+  <summary class="monospace smol">Cheatsheet</summary>
+  <dl class="tool-kv" style="margin-top: 1em">
+    <dt>.</dt><dd>any character except newline</dd>
+    <dt>\w \d \s</dt><dd>word, digit, whitespace</dd>
+    <dt>\W \D \S</dt><dd>not word, digit, whitespace</dd>
+    <dt>[abc]</dt><dd>any of a, b or c</dd>
+    <dt>[^abc]</dt><dd>not a, b or c</dd>
+    <dt>[a-g]</dt><dd>character between a and g</dd>
+    <dt>^abc$</dt><dd>start / end of the string</dd>
+    <dt>\b \B</dt><dd>word, not-word boundary</dd>
+    <dt>\t \n \r</dt><dd>tab, linefeed, carriage return</dd>
+    <dt>(abc)</dt><dd>capture group</dd>
+    <dt>(?&lt;name&gt;abc)</dt><dd>named capture group</dd>
+    <dt>\1</dt><dd>backreference to group 1</dd>
+    <dt>(?:abc)</dt><dd>non-capturing group</dd>
+    <dt>(?=abc) (?!abc)</dt><dd>positive / negative lookahead</dd>
+    <dt>(?&lt;=abc) (?&lt;!abc)</dt><dd>positive / negative lookbehind</dd>
+    <dt>a* a+ a?</dt><dd>0 or more, 1 or more, 0 or 1</dd>
+    <dt>a{5} a{2,}</dt><dd>exactly five, two or more</dd>
+    <dt>a{1,3}</dt><dd>between one and three</dd>
+    <dt>a+? a{2,}?</dt><dd>match as few as possible</dd>
+    <dt>ab|cd</dt><dd>match ab or cd</dd>
+  </dl>
+</details>

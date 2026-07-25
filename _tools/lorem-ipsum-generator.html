@@ -1,0 +1,40 @@
+---
+layout: tool
+title: Lorem Ipsum Generator
+slug: lorem-ipsum-generator
+permalink: /lorem-ipsum-generator
+category: Text
+description: Placeholder text by the paragraph, sentence or word, for when a layout needs filling.
+keywords: lorem ipsum placeholder dummy text filler generate
+---
+
+<div class="tool-controls">
+  <label class="tool-check">
+    How many
+    <input type="number" class="tool-text tool-number" id="count" value="3" min="1" max="200" step="1">
+  </label>
+
+  <div class="tool-seg" role="radiogroup" aria-label="Unit">
+    <input type="radio" name="units" id="units-paragraphs" value="paragraphs" checked>
+    <label for="units-paragraphs">Paragraphs</label>
+    <input type="radio" name="units" id="units-sentences" value="sentences">
+    <label for="units-sentences">Sentences</label>
+    <input type="radio" name="units" id="units-words" value="words">
+    <label for="units-words">Words</label>
+  </div>
+
+  <label class="tool-check">
+    <input type="checkbox" id="start-with-lorem" checked>
+    Start with “Lorem ipsum”
+  </label>
+
+  <button type="button" class="tool-button monospace" id="generate">Generate</button>
+</div>
+
+<div class="tool-pane">
+  <div class="tool-pane-head">
+    <span class="tool-label monospace" id="output-label">Output</span>
+    <button type="button" class="tool-button--ghost monospace" id="copy">Copy</button>
+  </div>
+  <textarea class="tool-area" id="output" readonly aria-labelledby="output-label"></textarea>
+</div>

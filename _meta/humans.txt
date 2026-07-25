@@ -1,0 +1,17 @@
+---
+permalink: /humans.txt
+layout: null
+---
+/* TEAM */
+  Name: Badhri Nadh
+  Site: https://badhrinadh.com
+  GitHub: @BadhriNadhBade
+
+/* THANKS */
+  Tools ported from True Devtools by Dat Hoang (MIT)
+  https://github.com/dathoangnd/truedevtools.com
+
+/* SITE */
+  Standards: HTML5, CSS3, ES modules
+  Components: Jekyll, GitHub Pages
+  Software: Written by hand

@@ -1,0 +1,46 @@
+---
+layout: tool
+title: Random String Generator
+slug: random-string-generator
+permalink: /random-string-generator
+category: Text
+description: Random strings and passphrase-length secrets, drawn from your browser's cryptographic random source.
+keywords: random string password generate secret token nonce
+---
+
+<div class="tool-controls">
+  <label class="tool-check">
+    Length
+    <input type="number" class="tool-text tool-number" id="length" value="24" min="1" max="4096" step="1">
+  </label>
+
+  <label class="tool-check">
+    How many
+    <input type="number" class="tool-text tool-number" id="quantity" value="5" min="1" max="500" step="1">
+  </label>
+
+  <button type="button" class="tool-button monospace" id="generate">Generate</button>
+</div>
+
+<div class="tool-controls">
+  <label class="tool-check"><input type="checkbox" class="charset" value="uppercase" checked> A–Z</label>
+  <label class="tool-check"><input type="checkbox" class="charset" value="lowercase" checked> a–z</label>
+  <label class="tool-check"><input type="checkbox" class="charset" value="digits" checked> 0–9</label>
+  <label class="tool-check"><input type="checkbox" class="charset" value="symbols"> Symbols</label>
+  <label class="tool-check"><input type="checkbox" id="unambiguous"> Skip lookalikes</label>
+</div>
+
+<div class="tool-pane">
+  <div class="tool-pane-head">
+    <span class="tool-label monospace" id="output-label">Output</span>
+    <span class="tool-row">
+      <span class="tool-label monospace" id="entropy"></span>
+      <button type="button" class="tool-button--ghost monospace" id="copy">Copy</button>
+    </span>
+  </div>
+  <textarea class="tool-area" id="output" readonly spellcheck="false" aria-labelledby="output-label"></textarea>
+</div>
+
+<p class="tool-note">
+  Generated with <code>crypto.getRandomValues</code> and rejection sampling, so every character in the alphabet is equally likely — no modulo bias.
+</p>

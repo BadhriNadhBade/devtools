@@ -1,0 +1,678 @@
+---
+---
+
+// Theme inherited from badhrinadh.com. The palette block below is copied
+// verbatim from that site's assets/new.scss so the two stay in visual sync —
+// if a colour changes there, change it here too and nothing else needs to move.
+// Everything further down is built only from these variables, which is what
+// keeps light/dark working without a second set of rules.
+
+html { font-size: 100%; font: -apple-system-body; }
+
+:root {
+  --backgroundColor: #fdfdfd;
+  --textColor: #303030;
+  --secondaryTextColor: #404040;
+  --mutedTextColor: #707070;
+  --subtleBackgroundColor: #f5f5f5;
+  --heartedBackgroundColor: #ffe2e2;
+  --selectionBackgroundColor: #ffc;
+  --linkColor: #2357cd;
+  --borderColor: #ccc;
+  --hrColor: #888;
+  --activeColor: #74d274;
+  --langBackgroundColor: #eeeeee;
+  --langShadowColor: transparent;
+  --logoColor: #cccccc;
+  --photoBackground: #f4f4f4;
+
+  --sansserif: 'IBM Plex Sans', system-ui, sans-serif;
+  --monospace: ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  // Added for this site. badhrinadh.com has no diff views, so there was
+  // nothing to inherit. Deletions reuse the hearted background, which is
+  // already the palette's red; additions are its green counterpart.
+  --addedBackgroundColor: #e3f7e3;
+  --removedBackgroundColor: var(--heartedBackgroundColor);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --backgroundColor: #151615;
+    --textColor: #dbdfdf;
+    --secondaryTextColor: #bfc5c5;
+    --mutedTextColor: #b4b6b8;
+    --subtleBackgroundColor: #3a3b3b;
+    --heartedBackgroundColor: #652222;
+    --selectionBackgroundColor: #19446b;
+    --linkColor: #6eb8ff;
+    --borderColor: #414141;
+    --hrColor: #888;
+    --activeColor: #74d274;
+    --langBackgroundColor: #2c2c2c;
+    --langShadowColor: #0b0c0b33;
+    --logoColor: #555555;
+    --photoBackground: #1a1a1a;
+
+    --addedBackgroundColor: #1f4522;
+    --removedBackgroundColor: var(--heartedBackgroundColor);
+  }
+}
+
+body {
+  background: var(--backgroundColor);
+  color: var(--textColor);
+  line-height: 1.62em;
+  padding: 0 2.5em;
+  margin: 0;
+  font-size: 1.1rem;
+  word-wrap: break-word;
+}
+
+body, kbd, button, input, select, textarea {
+  font-family: var(--sansserif);
+}
+
+a {
+  color: var(--linkColor);
+  text-underline-offset: 3px;
+}
+
+a[href^='http']:not([href^='https://badhrinadh.com/'], [href^='https://devtools.badhrinadh.com/'], .hidden-link, :has(img)) {
+  position: relative;
+  padding-right: 0.5em;
+
+  &:after {
+    content: '┓' / ', external';
+    font-family: var(--sansserif);
+    font-size: 0.5em;
+    line-height: 0;
+    text-decoration: none;
+    position: absolute;
+    margin-top: calc(1rem - 1.7em);
+    line-height: 1em;
+  }
+}
+
+a, u {
+  text-decoration-thickness: 0.5px;
+}
+
+.hidden-link {
+  text-decoration: none;
+}
+
+::selection {
+  background: var(--selectionBackgroundColor);
+}
+
+header {
+  padding-top: 2.5em;
+}
+
+footer {
+  padding-bottom: 2.5em;
+}
+
+header,
+main,
+footer {
+  max-width: 36em;
+  margin: auto;
+}
+
+// Tools need room for two panes side by side, so they get a wider column.
+// badhrinadh.com already varies width per page type (the photos page goes
+// full-bleed), so this follows an established pattern rather than inventing one.
+[data-page-type="tool"] {
+  header,
+  main,
+  footer {
+    max-width: 54em;
+  }
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 1.4em 0 1em 0;
+  font-weight: 300;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  line-height: 1em;
+  color: var(--mutedTextColor);
+}
+
+.h1 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0;
+}
+
+.normal-heading {
+  margin-right: .4rem;
+  font-size: inherit;
+  font-weight: 300;
+  display: inline-block;
+  margin-top: 0;
+}
+
+.hr {
+  border: 0;
+  border-left: .7rem solid var(--textColor);
+  height: .7rem;
+  margin: 3rem 0;
+  background: none;
+}
+
+.inline-hr {
+  border: 0;
+  border-left: .3rem solid var(--borderColor);
+  height: .3rem;
+  display: inline-block;
+  vertical-align: middle;
+  align-self: center;
+  margin: 0;
+}
+
+.desc {
+  color: var(--mutedTextColor);
+  font-size: 0.75em;
+  line-height: 1.5;
+}
+
+.smol {
+  font-size: .8em;
+  font-weight: 300;
+}
+
+.monospace, pre, code, kbd {
+  font-family: var(--monospace);
+  font-size: 0.85em;
+}
+
+kbd {
+  border: 1px solid var(--borderColor);
+  padding: 1px 4px;
+  border-radius: 3px;
+  box-shadow: 0 1px;
+  font-size: 0.9em;
+}
+
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .6em;
+  align-items: center;
+  margin: .6em 0;
+
+  nav {
+    margin: 0;
+  }
+}
+
+.back-link {
+  text-decoration: none;
+  color: var(--textColor);
+  background-color: var(--langBackgroundColor);
+  width: 1.6em;
+  text-align: center;
+  line-height: 1.6em;
+  aspect-ratio: 1/1;
+  display: inline-block;
+  border-radius: 4em;
+}
+
+.styled-link {
+  margin-left: .4rem;
+  font-size: .7em;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+
+// ---------------------------------------------------------------------------
+// Tool index
+// ---------------------------------------------------------------------------
+
+.tool-search {
+  margin: 1.5em 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: .3em;
+}
+
+.tool-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    margin-bottom: 1.2em;
+  }
+
+  a {
+    text-decoration-thickness: 0.5px;
+  }
+}
+
+.tool-category {
+  margin-top: 2.5em;
+
+  &:first-of-type {
+    margin-top: 1.5em;
+  }
+}
+
+// Shown by the index script when a search matches nothing.
+.tool-empty {
+  color: var(--mutedTextColor);
+  font-size: .8em;
+}
+
+
+// ---------------------------------------------------------------------------
+// Tool UI. badhrinadh.com has almost no form controls, so these are built from
+// the palette variables above rather than inherited, the same way that site's
+// contact form was.
+// ---------------------------------------------------------------------------
+
+.tool {
+  margin-top: 1.5em;
+}
+
+.tool-panes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5em;
+  align-items: start;
+}
+
+// Tools whose output is a table or a list of stats read better full width.
+.tool-panes--stacked {
+  grid-template-columns: 1fr;
+}
+
+@media (max-width: 46em) {
+  .tool-panes {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tool-pane {
+  display: flex;
+  flex-direction: column;
+  gap: .5em;
+  min-width: 0;
+}
+
+.tool-pane-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+  min-height: 1.8em;
+}
+
+.tool-label {
+  color: var(--mutedTextColor);
+  font-size: .7em;
+}
+
+.tool-field {
+  display: flex;
+  flex-direction: column;
+  gap: .3em;
+}
+
+.tool-row {
+  display: flex;
+  align-items: center;
+  gap: .8em;
+  flex-wrap: wrap;
+}
+
+.tool-controls {
+  display: flex;
+  align-items: center;
+  gap: .8em;
+  flex-wrap: wrap;
+  margin-bottom: 1.2em;
+}
+
+textarea.tool-area,
+input.tool-text,
+select.tool-select {
+  font-size: 1rem;
+  color: var(--textColor);
+  background: var(--backgroundColor);
+  border: 1px solid var(--borderColor);
+  border-radius: .4em;
+  padding: .5em .7em;
+  width: 100%;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: 2px solid var(--linkColor);
+    outline-offset: 1px;
+    border-color: transparent;
+  }
+}
+
+// Textareas keep the browser's own soft wrapping. Forcing `white-space: pre`
+// here would push prose, and single-line inputs like a JWT, off the right
+// edge of a box only a few lines tall. Alignment only matters in the read-only
+// `.tool-out` panes below, which are the ones that set `pre`.
+textarea.tool-area {
+  font-family: var(--monospace);
+  font-size: .8rem;
+  line-height: 1.6;
+  resize: vertical;
+  min-height: 14em;
+  tab-size: 2;
+}
+
+textarea.tool-area--short {
+  min-height: 7em;
+}
+
+// Read-only outputs sit on the subtle background so the pair reads as
+// input -> output without needing a border colour change.
+textarea.tool-area[readonly],
+.tool-out {
+  background: var(--subtleBackgroundColor);
+  color: var(--secondaryTextColor);
+}
+
+input.tool-text--mono {
+  font-family: var(--monospace);
+  font-size: .8rem;
+}
+
+input.tool-number {
+  width: 6em;
+}
+
+select.tool-select {
+  width: auto;
+  padding-right: 2em;
+}
+
+// A block-level read-only output that is not a textarea (hash lists, parsed
+// key/value output, diff views).
+.tool-out {
+  font-family: var(--monospace);
+  font-size: .8rem;
+  line-height: 1.6;
+  border: 1px solid var(--borderColor);
+  border-radius: .4em;
+  padding: .7em .8em;
+  margin: 0;
+  overflow-x: auto;
+  white-space: pre;
+  min-height: 3em;
+  box-sizing: border-box;
+}
+
+.tool-out--wrap {
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.tool-button {
+  font-size: .8em;
+  color: var(--backgroundColor);
+  background: var(--textColor);
+  border: 0;
+  border-radius: .4em;
+  padding: .6em 1.2em;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--linkColor);
+  }
+
+  &:disabled {
+    opacity: .5;
+    cursor: default;
+  }
+}
+
+.tool-button--ghost {
+  font-size: .7em;
+  color: var(--secondaryTextColor);
+  background: var(--subtleBackgroundColor);
+  border: 1px solid var(--borderColor);
+  border-radius: .4em;
+  padding: .5em .9em;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: var(--linkColor);
+    color: var(--linkColor);
+  }
+
+  &:disabled {
+    opacity: .5;
+    cursor: default;
+  }
+}
+
+// Segmented control. Borrows the ○ / ● marker treatment from the language
+// switcher on badhrinadh.com so mode toggles look like they belong here.
+.tool-seg {
+  font-size: .8rem;
+  display: inline-flex;
+  white-space: nowrap;
+  box-shadow: 0 5px 15px var(--langShadowColor);
+  border: 0.5px solid var(--borderColor);
+  font-family: var(--monospace);
+  border-radius: 0.4em;
+  overflow: auto;
+  max-width: 100%;
+  gap: 1em;
+  padding: 0 0.5em;
+  box-sizing: border-box;
+
+  label {
+    color: var(--mutedTextColor);
+    padding: 0.5em;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+
+    &:before {
+      content: "○";
+      color: var(--borderColor);
+      padding-right: 10px;
+    }
+
+    &:hover:before {
+      content: "●";
+    }
+  }
+
+  input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  input:checked + label {
+    color: var(--textColor);
+
+    &:before {
+      content: "●";
+      color: var(--activeColor);
+    }
+  }
+
+  input:focus-visible + label {
+    outline: 2px solid var(--linkColor);
+    outline-offset: -2px;
+    border-radius: .3em;
+  }
+}
+
+.tool-check {
+  display: inline-flex;
+  align-items: center;
+  gap: .4em;
+  font-size: .8em;
+  color: var(--secondaryTextColor);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tool-status {
+  font-size: .75em;
+  margin: .8em 0 0;
+  min-height: 1.2em;
+
+  &:empty { display: none; }
+  &[data-kind="ok"] { color: var(--activeColor); }
+  &[data-kind="err"] { color: var(--textColor); }
+  &[data-kind="info"] { color: var(--mutedTextColor); }
+}
+
+// Key/value output used by the JWT and URL parsers.
+.tool-kv {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(6em, max-content) 1fr;
+  gap: .4em 1.2em;
+  font-size: .8rem;
+
+  dt {
+    font-family: var(--monospace);
+    color: var(--mutedTextColor);
+    word-break: break-all;
+  }
+
+  dd {
+    font-family: var(--monospace);
+    margin: 0;
+    word-break: break-all;
+  }
+}
+
+.tool-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .8rem;
+
+  th, td {
+    text-align: left;
+    padding: .4em .6em;
+    border-bottom: 1px solid var(--borderColor);
+  }
+
+  th {
+    color: var(--mutedTextColor);
+    font-weight: 300;
+    font-size: .9em;
+  }
+
+  td {
+    font-family: var(--monospace);
+  }
+
+  // Counts read better right-aligned against the text column.
+  td + td, th + th {
+    text-align: right;
+    width: 6em;
+  }
+}
+
+.tool-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7em, 1fr));
+  gap: 1em;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  div {
+    display: flex;
+    flex-direction: column;
+    gap: .1em;
+  }
+
+  dt {
+    color: var(--mutedTextColor);
+    font-size: .7em;
+  }
+
+  dd {
+    margin: 0;
+    font-family: var(--monospace);
+    font-size: 1.1em;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+// Regex matches and diff rows. Both lean on palette colours that already
+// carry the right meaning: the selection yellow for a hit, the hearted red
+// for something removed.
+mark.tool-match {
+  background: var(--selectionBackgroundColor);
+  color: inherit;
+  border-radius: 2px;
+}
+
+.tool-diff {
+  display: block;
+
+  ins, del, span {
+    text-decoration: none;
+    padding: 0 .3em;
+    margin: 0 -.3em;
+  }
+
+  ins {
+    background: var(--addedBackgroundColor);
+  }
+
+  del {
+    background: var(--removedBackgroundColor);
+  }
+}
+
+// Line mode: one row per line. Every part is a block, so no newline text
+// nodes are needed between them — adding those would leave a blank line
+// after each change — and the marker column stays aligned.
+.tool-diff--lines {
+  ins, del, span {
+    display: block;
+  }
+
+  // Keeps +/- legible for anyone who can't distinguish the fills, and gives
+  // an empty line something to occupy so it still takes a row.
+  ins:before { content: "+ "; color: var(--mutedTextColor); }
+  del:before { content: "- "; color: var(--mutedTextColor); }
+  span:before { content: "\00a0\00a0"; }
+}
+
+// Word mode reflows as prose, so parts stay inline. Markers would be noise
+// mid-sentence; underline and strikethrough carry the same information
+// without relying on colour.
+.tool-diff--words {
+  white-space: pre-wrap;
+
+  ins, del, span {
+    display: inline;
+  }
+
+  ins { text-decoration: underline; }
+  del { text-decoration: line-through; }
+}
+
+.tool-note {
+  color: var(--mutedTextColor);
+  font-size: .75em;
+  line-height: 1.5;
+  margin-top: 2em;
+}

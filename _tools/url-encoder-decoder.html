@@ -1,0 +1,45 @@
+---
+layout: tool
+title: URL Encoder / Decoder
+slug: url-encoder-decoder
+permalink: /url-encoder-decoder
+category: Encoding
+description: Percent-encode text for use in a URL, or decode it back. Choose whether to escape the characters that separate a URL's parts.
+keywords: url uri percent encode decode escape unescape encodeURIComponent
+---
+
+<div class="tool-controls">
+  <div class="tool-seg" role="radiogroup" aria-label="Mode">
+    <input type="radio" name="mode" id="mode-encode" value="encode" checked>
+    <label for="mode-encode">Encode</label>
+    <input type="radio" name="mode" id="mode-decode" value="decode">
+    <label for="mode-decode">Decode</label>
+  </div>
+
+  <div class="tool-seg" role="radiogroup" aria-label="Scope">
+    <input type="radio" name="scope" id="scope-component" value="component" checked>
+    <label for="scope-component">Component</label>
+    <input type="radio" name="scope" id="scope-full" value="full">
+    <label for="scope-full">Whole URL</label>
+  </div>
+</div>
+
+<p class="desc" id="scope-hint"></p>
+
+<div class="tool-panes">
+  <div class="tool-pane">
+    <div class="tool-pane-head">
+      <span class="tool-label monospace" id="input-label">Input</span>
+      <button type="button" class="tool-button--ghost monospace" id="sample">Sample</button>
+    </div>
+    <textarea class="tool-area" id="input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="input-label"></textarea>
+  </div>
+
+  <div class="tool-pane">
+    <div class="tool-pane-head">
+      <span class="tool-label monospace" id="output-label">Output</span>
+      <button type="button" class="tool-button--ghost monospace" id="copy">Copy</button>
+    </div>
+    <textarea class="tool-area" id="output" readonly spellcheck="false" aria-labelledby="output-label"></textarea>
+  </div>
+</div>

@@ -1,0 +1,100 @@
+// Longest-common-subsequence diff over an array of tokens. The diff tool uses
+// it for both granularities: lines, and words within a line.
+
+// The DP table is (n+1)*(m+1) 32-bit cells, so this cap keeps it at 8MB. Past
+// that the two inputs are almost certainly unrelated and a token-level diff
+// would be noise anyway, so the middle section is reported as one replacement.
+const MAX_CELLS = 2_000_000
+
+function middle(a, b) {
+  const n = a.length
+  const m = b.length
+
+  if (n === 0) return b.map(text => ({ type: 'add', text }))
+  if (m === 0) return a.map(text => ({ type: 'del', text }))
+
+  if ((n + 1) * (m + 1) > MAX_CELLS) {
+    return [
+      ...a.map(text => ({ type: 'del', text })),
+      ...b.map(text => ({ type: 'add', text }))
+    ]
+  }
+
+  const width = m + 1
+  const dp = new Uint32Array((n + 1) * width)
+
+  for (let i = n - 1; i >= 0; i--) {
+    for (let j = m - 1; j >= 0; j--) {
+      dp[i * width + j] = a[i] === b[j]
+        ? dp[(i + 1) * width + j + 1] + 1
+        : Math.max(dp[(i + 1) * width + j], dp[i * width + j + 1])
+    }
+  }
+
+  const out = []
+  let i = 0
+  let j = 0
+
+  while (i < n && j < m) {
+    if (a[i] === b[j]) {
+      out.push({ type: 'same', text: a[i] })
+      i++
+      j++
+    } else if (dp[(i + 1) * width + j] >= dp[i * width + j + 1]) {
+      out.push({ type: 'del', text: a[i] })
+      i++
+    } else {
+      out.push({ type: 'add', text: b[j] })
+      j++
+    }
+  }
+
+  while (i < n) out.push({ type: 'del', text: a[i++] })
+  while (j < m) out.push({ type: 'add', text: b[j++] })
+
+  return out
+}
+
+/**
+ * Diffs two token arrays.
+ *
+ * Common head and tail are stripped first — for the usual case of a small
+ * edit in a large file that leaves the DP table tiny.
+ *
+ * @returns {{type: 'same'|'add'|'del', text: string}[]}
+ */
+export function diffTokens(a, b) {
+  let start = 0
+  const shortest = Math.min(a.length, b.length)
+  while (start < shortest && a[start] === b[start]) start++
+
+  let aEnd = a.length
+  let bEnd = b.length
+  while (aEnd > start && bEnd > start && a[aEnd - 1] === b[bEnd - 1]) {
+    aEnd--
+    bEnd--
+  }
+
+  const out = []
+  for (let i = 0; i < start; i++) out.push({ type: 'same', text: a[i] })
+  out.push(...middle(a.slice(start, aEnd), b.slice(start, bEnd)))
+  for (let i = aEnd; i < a.length; i++) out.push({ type: 'same', text: a[i] })
+
+  return out
+}
+
+export const splitLines = text => text.split('\n')
+
+// Keeps the whitespace attached to each token so a word diff can be rendered
+// back as readable text.
+export const splitWords = text => text.match(/\S+\s*|\s+/g) || []
+
+export function countChanges(parts) {
+  let added = 0
+  let removed = 0
+  for (const part of parts) {
+    if (part.type === 'add') added++
+    else if (part.type === 'del') removed++
+  }
+  return { added, removed, unchanged: parts.length - added - removed }
+}

@@ -1,0 +1,86 @@
+{% comment %}
+  The page shell from badhrinadh.com, trimmed to what this site needs. The
+  posts/notes/photos branches are gone — there is nothing here but an index
+  and a set of tools — but the header, footer and metadata block are
+  deliberately unchanged so the two sites feel like one.
+{% endcomment %}
+{% assign lang = "en-US" %}
+<!doctype html>
+<html lang="{{ lang }}">
+  <head>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="text/html; charset=utf-8" http-equiv="content-type">
+    <link rel="icon" href="/assets/img/fav.svg" type="image/svg+xml" sizes="24x24">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;1,300&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@600&display=swap" rel="stylesheet">
+    <link href="/assets/css/new.css" rel="stylesheet" type="text/css">
+    {% if page.title and page.root != true %}
+      <title>{{ page.title }} @ {{ site.title }}</title>
+      <meta content="{{ page.title }} @ {{ site.title }}" name="twitter:title">
+    {% else %}
+      <title>{{ site.title }}</title>
+      <meta content="{{ site.title }}" name="twitter:title">
+    {% endif %}
+    {% assign page_description = page.description | default: site.description %}
+    <meta content="{{ site.title }}" property="og:site_name">
+    <meta content="{{ page_description }}" name="description">
+    <meta content="{{ page_description }}" property="og:description">
+    <meta content="{{ site.url }}{{ page.url }}" property="og:url">
+    <meta content="website" property="og:type">
+    <meta content="summary" name="twitter:card">
+    <link type="text/plain" rel="author" href="{{ site.url }}/humans.txt" />
+  </head>
+
+  {% comment %}
+    Derived from the collection rather than from the layout's own front
+    matter: a layout's `type:` is exposed as `layout.type`, not `page.type`,
+    and relying on that would leave every tool page silently untagged — and
+    so laid out at the narrow reading width instead of the tool width.
+  {% endcomment %}
+  {% if page.collection == "tools" %}
+    {% assign page_type = "tool" %}
+  {% else %}
+    {% assign page_type = page.type %}
+  {% endif %}
+  <body data-page-type="{{ page_type }}">
+    <header>
+      {% comment %}
+        Inner pages get a back arrow to the tool index. The index itself
+        points back up at the main site, so the subdomain never becomes a
+        dead end.
+      {% endcomment %}
+      {% if page.root == true %}
+        <div class="logo-container">
+          <a href="https://badhrinadh.com/" aria-label="badhrinadh.com" class="back-link">&leftarrow;</a>
+          <span class="font">Badhri Nadh</span>
+        </div>
+      {% else %}
+        <div class="logo-container">
+          <a href="/" aria-label="All tools" class="back-link">&leftarrow;</a>
+          <span class="font">DevTools</span>
+        </div>
+      {% endif %}
+      <h1 class="h1">
+        <span lang="{{ lang }}">{{ page.title }}</span>
+      </h1>
+      <div class="desc">{{ page.description }}</div>
+    </header>
+    <main>
+      {{ content }}
+    </main>
+    <footer>
+      <hr class="hr">
+      <nav class="monospace" aria-label="About this site">
+        <a href="https://badhrinadh.com/">{{ site.i18n[lang].home }}</a>
+        <hr class="inline-hr">
+        <a href="/accessibility-statement">{{ site.i18n[lang].accessibility }}</a>
+        <hr class="inline-hr">
+        <a href="/colophon">{{ site.i18n[lang].colophon }}</a>
+        <hr class="inline-hr">
+        <a href="https://github.com/BadhriNadhBade/devtools">{{ site.i18n[lang].source }}</a>
+      </nav>
+    </footer>
+  </body>
+</html>

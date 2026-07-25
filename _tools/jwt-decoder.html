@@ -1,0 +1,54 @@
+---
+layout: tool
+title: JWT Decoder
+slug: jwt-decoder
+permalink: /jwt-decoder
+category: Encoding
+description: Read the header and payload of a JSON Web Token, with the timestamp claims translated into dates you can read.
+keywords: jwt json web token decode bearer claims exp iat
+---
+
+<div class="tool-controls">
+  <button type="button" class="tool-button--ghost monospace" id="sample">Sample</button>
+  <button type="button" class="tool-button--ghost monospace" id="copy">Copy payload</button>
+</div>
+
+<div class="tool-pane">
+  <div class="tool-pane-head">
+    <span class="tool-label monospace" id="input-label">Token</span>
+  </div>
+  <textarea class="tool-area tool-area--short" id="input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="input-label" placeholder="eyJhbGciOi..."></textarea>
+</div>
+
+<div id="result" hidden>
+  <div class="tool-panes">
+    <div class="tool-pane">
+      <div class="tool-pane-head">
+        <span class="tool-label monospace" id="header-label">Header</span>
+      </div>
+      <pre class="tool-out" id="header" aria-labelledby="header-label"></pre>
+    </div>
+
+    <div class="tool-pane">
+      <div class="tool-pane-head">
+        <span class="tool-label monospace" id="payload-label">Payload</span>
+      </div>
+      <pre class="tool-out" id="payload" aria-labelledby="payload-label"></pre>
+    </div>
+  </div>
+
+  <div class="tool-pane" style="margin-top: 1.5em">
+    <div class="tool-pane-head">
+      <span class="tool-label monospace" id="claims-label">Registered claims</span>
+    </div>
+    <dl class="tool-kv" id="claims" aria-labelledby="claims-label"></dl>
+  </div>
+</div>
+
+{% comment %}
+  Worth stating plainly. A decoder reads the token; it cannot tell you whether
+  the token is genuine, and people do conflate the two.
+{% endcomment %}
+<p class="tool-note">
+  This decodes the token only. The signature is <strong>not</strong> verified — anyone can mint a token with any payload, so never trust a decoded claim without checking the signature against the issuer's key on your server.
+</p>

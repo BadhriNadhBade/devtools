@@ -1,0 +1,35 @@
+---
+layout: tool
+title: Hash Generator
+slug: hash-generator
+permalink: /hash-generator
+category: Encoding
+description: MD5, SHA-1, SHA-256, SHA-384 and SHA-512 digests of whatever you type, all at once.
+keywords: hash md5 sha1 sha256 sha384 sha512 checksum digest
+---
+
+<div class="tool-controls">
+  <button type="button" class="tool-button--ghost monospace" id="sample">Sample</button>
+  <label class="tool-check">
+    <input type="checkbox" id="uppercase">
+    Uppercase
+  </label>
+</div>
+
+<div class="tool-pane">
+  <div class="tool-pane-head">
+    <span class="tool-label monospace" id="input-label">Text</span>
+  </div>
+  <textarea class="tool-area tool-area--short" id="input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="input-label"></textarea>
+</div>
+
+<div class="tool-pane" style="margin-top: 1.5em">
+  <div class="tool-pane-head">
+    <span class="tool-label monospace" id="digest-label">Digests</span>
+  </div>
+  <dl class="tool-kv" id="digests" aria-labelledby="digest-label"></dl>
+</div>
+
+<p class="tool-note">
+  MD5 and SHA-1 are broken for anything security-related — treat them as checksums for matching against existing values, not as a way to protect data. For storing passwords use a purpose-built function like bcrypt or Argon2, never a raw digest.
+</p>

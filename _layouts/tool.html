@@ -1,0 +1,29 @@
+---
+layout: default
+---
+
+{% comment %}
+  Wraps a tool's markup. Each tool document supplies its own controls and
+  panes as the page body; everything shared — the status line, the privacy
+  note, and loading the tool's script — lives here.
+
+  The script is derived from the document's filename, so a tool at
+  _tools/foo.html is driven by /assets/js/tools/foo.js and there is nothing to
+  wire up by hand.
+{% endcomment %}
+
+<div class="tool">
+  {{ content }}
+</div>
+
+<p class="tool-status monospace" id="status" role="status" aria-live="polite"></p>
+
+<noscript>
+  <p class="desc">These tools are all JavaScript — nothing is computed on a server, so with JavaScript off there is nothing to show.</p>
+</noscript>
+
+<p class="tool-note">
+  Runs entirely in this tab. Nothing you paste is uploaded, logged, or sent anywhere.
+</p>
+
+<script type="module" src="/assets/js/tools/{{ page.slug }}.js"></script>

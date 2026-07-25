@@ -1,0 +1,50 @@
+---
+layout: tool
+title: UUID Generator
+slug: uuid-generator
+permalink: /uuid-generator
+category: Encoding
+description: Generate random v4 or time-ordered v7 UUIDs in bulk, from your browser's cryptographic random source.
+keywords: uuid guid v4 v7 random identifier generate
+---
+
+<div class="tool-controls">
+  <div class="tool-seg" role="radiogroup" aria-label="Version">
+    <input type="radio" name="version" id="version-4" value="4" checked>
+    <label for="version-4">v4</label>
+    <input type="radio" name="version" id="version-7" value="7">
+    <label for="version-7">v7</label>
+    <input type="radio" name="version" id="version-nil" value="nil">
+    <label for="version-nil">Nil</label>
+  </div>
+
+  <label class="tool-check">
+    How many
+    <input type="number" class="tool-text tool-number" id="quantity" value="5" min="1" max="500" step="1">
+  </label>
+
+  <label class="tool-check">
+    <input type="checkbox" id="uppercase">
+    Uppercase
+  </label>
+
+  <label class="tool-check">
+    <input type="checkbox" id="braces">
+    Braces
+  </label>
+
+  <button type="button" class="tool-button monospace" id="generate">Generate</button>
+</div>
+
+<p class="desc" id="version-hint"></p>
+
+<div class="tool-pane">
+  <div class="tool-pane-head">
+    <span class="tool-label monospace" id="output-label">Output</span>
+    <span class="tool-row">
+      <button type="button" class="tool-button--ghost monospace" id="copy">Copy</button>
+      <button type="button" class="tool-button--ghost monospace" id="download">Download</button>
+    </span>
+  </div>
+  <textarea class="tool-area" id="output" readonly spellcheck="false" aria-labelledby="output-label"></textarea>
+</div>
