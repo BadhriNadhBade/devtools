@@ -17,6 +17,17 @@ description: Small developer tools that run entirely in your browser. Nothing yo
 <p class="tool-empty" id="empty" hidden>Nothing matches that.</p>
 
 {% comment %}
+  Destination for pinned tools. Empty in the markup and filled by the index
+  script, which moves the rows themselves rather than cloning them — a tool is
+  only ever in the DOM once, so nothing can drift out of sync. Stays hidden
+  until something is pinned, and with JavaScript off it never appears at all.
+{% endcomment %}
+<section class="tool-category" id="pinned" data-category hidden>
+  <h2 class="normal-heading">Pinned</h2>
+  <ul class="tool-list" id="pinned-list"></ul>
+</section>
+
+{% comment %}
   Both the index and the pages themselves come from the _tools collection, so
   a new tool shows up here the moment its file exists.
 {% endcomment %}
@@ -33,8 +44,16 @@ description: Small developer tools that run entirely in your browser. Nothing yo
             depending on how any one tool happened to write its keywords.
           {% endcomment %}
           {% capture haystack %}{{ tool.title }} {{ tool.keywords }} {{ tool.description }}{% endcapture %}
-          <li data-search="{{ haystack | downcase | escape }}">
-            <a href="{{ tool.url }}">{{ tool.title }}</a>
+          <li data-search="{{ haystack | downcase | escape }}" data-slug="{{ tool.slug }}">
+            <div class="tool-row">
+              <a class="tool-pill" href="{{ tool.url }}">{{ tool.title }}</a>
+              {% comment %}
+                Hidden until the script unhides it: pinning is localStorage, so
+                without JavaScript this button could not do anything and should
+                not be offered.
+              {% endcomment %}
+              <button type="button" class="tool-pin" data-pin aria-pressed="false" aria-label="Pin {{ tool.title }}" hidden>☆</button>
+            </div>
             <div class="desc">{{ tool.description }}</div>
           </li>
         {% endfor %}

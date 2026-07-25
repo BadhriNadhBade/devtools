@@ -254,8 +254,42 @@ nav {
     margin-bottom: 1.2em;
   }
 
-  a {
-    text-decoration-thickness: 0.5px;
+  .desc {
+    margin-top: .4em;
+  }
+}
+
+// The tool name and its pin sit on one line; the description drops below.
+.tool-row {
+  display: flex;
+  align-items: center;
+  gap: .4em;
+}
+
+.tool-pill {
+  @extend %pill;
+
+  display: inline-block;
+  text-decoration: none;
+  // Larger than the .7em the ghost buttons use. On the index these are the
+  // primary navigation rather than a secondary control beside a field.
+  font-size: .85em;
+}
+
+// Deliberately quiet: the star is a per-row affordance, not something that
+// should compete with the tool name beside it.
+.tool-pin {
+  font-size: .9em;
+  line-height: 1;
+  color: var(--mutedTextColor);
+  background: transparent;
+  border: 0;
+  padding: .25em;
+  cursor: pointer;
+
+  &:hover,
+  &[aria-pressed="true"] {
+    color: var(--linkColor);
   }
 }
 
@@ -441,8 +475,11 @@ select.tool-select {
   }
 }
 
-.tool-button--ghost {
-  font-size: .7em;
+// The pill surface: a small, quiet, clickable thing. Lifted from
+// badhrinadh.com's `.print-attach-btn`, which is where this shape started, so
+// the two sites keep one vocabulary — if either moves, move both. Links are
+// never `:disabled`, so the same rules serve buttons and anchors alike.
+%pill {
   color: var(--secondaryTextColor);
   background: var(--subtleBackgroundColor);
   border: 1px solid var(--borderColor);
@@ -459,6 +496,12 @@ select.tool-select {
     opacity: .5;
     cursor: default;
   }
+}
+
+.tool-button--ghost {
+  @extend %pill;
+
+  font-size: .7em;
 }
 
 // Segmented control. Borrows the ○ / ● marker treatment from the language
