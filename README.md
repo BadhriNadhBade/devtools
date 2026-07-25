@@ -45,7 +45,7 @@ keywords: base64 b64 encode decode btoa atob
 
 ```
 _config.yml             Jekyll config; must live at the root
-CNAME                   the custom domain; must reach _site/ as-is
+wrangler.jsonc          Cloudflare Worker: serves _site, owns the custom domain
 index.html              the tool index
 
 _layouts/default.html   page shell, shared with badhrinadh.com
@@ -67,8 +67,22 @@ means Jekyll skips the directory unless it is declared in `_config.yml`. Every
 document in them sets an explicit `permalink`, so moving a file between folders
 never changes the URL it is served at.
 
-Only `_config.yml`, `Gemfile` and `CNAME` genuinely have to sit at the root;
-`index.html` stays there by convention.
+Only `_config.yml`, `Gemfile` and `wrangler.jsonc` genuinely have to sit at the
+root; `index.html` stays there by convention.
+
+## Deploying
+
+Cloudflare Workers Builds, on every push to `main`. The dashboard runs
+`bundle exec jekyll build` and then `npx wrangler deploy`; `wrangler.jsonc`
+points the Worker's asset directory at the resulting `_site` and claims
+`devtools.badhrinadh.com` as a custom domain. There is no `CNAME` file and
+GitHub Pages is disabled — Cloudflare answers for this hostname, not GitHub.
+
+`Gemfile.lock` is committed on purpose: `github-pages` is unpinned, and its
+`nokogiri` requirement floats within `>= 1.16.2, < 2.0`, so without a lockfile
+an upstream gem release can change what a deploy builds with no commit here.
+Regenerate it with `bundle lock --add-platform x86_64-linux` so the Linux
+native gems resolve on the build image.
 
 ## Where the tools came from
 

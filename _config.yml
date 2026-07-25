@@ -47,3 +47,7 @@ exclude:
   - Gemfile
   - Gemfile.lock
   - vendor
+  # Build-time config, not site content. Jekyll copies any unrecognised root
+  # file into _site, so without this the Worker's own config would be served
+  # at /wrangler.jsonc.
+  - wrangler.jsonc
