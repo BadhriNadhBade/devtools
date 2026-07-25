@@ -1,0 +1,23 @@
+{
+  "$schema": "https://unpkg.com/wrangler/config-schema.json",
+  // Assets-only Worker: no `main`, so Cloudflare serves ./_site directly and
+  // never boots a script. Jekyll writes that directory during the build
+  // command (`bundle exec jekyll build`); this file only says where to find
+  // it afterwards. _site is gitignored — it exists on the build machine, not
+  // in the repo.
+  "name": "devtools",
+  "compatibility_date": "2026-07-25",
+
+  // Already attached in the dashboard; declared here so production routing
+  // lives in version control instead of only in dashboard state.
+  "routes": [
+    { "pattern": "devtools.badhrinadh.com", "custom_domain": true }
+  ],
+
+  "assets": {
+    "directory": "./_site",
+    // Jekyll emits /404.html (see _pages/404.html), so unmatched paths get
+    // the styled page rather than Cloudflare's default text response.
+    "not_found_handling": "404-page"
+  }
+}
