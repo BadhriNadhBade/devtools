@@ -37,19 +37,28 @@ function key(token) {
   return value
 }
 
+// Two large unrelated inputs can diff into hundreds of thousands of parts, and
+// one element each would lock the tab up for far longer than anyone would wait.
+// The summary below the view still counts every change.
+const RENDER_LIMIT = 20000
+
 function render(parts, byWord) {
   diffOut.replaceChildren()
   // The two modes lay out differently enough — block rows versus reflowing
   // prose — that the stylesheet handles each on its own.
   diffOut.className = `tool-out tool-diff ${byWord ? 'tool-diff--words' : 'tool-diff--lines'}`
 
-  for (const part of parts) {
+  const shown = parts.length > RENDER_LIMIT ? parts.slice(0, RENDER_LIMIT) : parts
+
+  for (const part of shown) {
     const element = document.createElement(
       part.type === 'add' ? 'ins' : part.type === 'del' ? 'del' : 'span'
     )
     element.textContent = part.text
     diffOut.append(element)
   }
+
+  return shown.length < parts.length
 }
 
 function run() {
@@ -83,7 +92,7 @@ function run() {
     return { type: 'same', text }
   })
 
-  render(display, byWord)
+  const truncated = render(display, byWord)
 
   const { added, removed } = countChanges(parts)
   const unit = byWord ? 'word' : 'line'
@@ -91,7 +100,8 @@ function run() {
     ? `+${added} −${removed} ${unit}${added + removed === 1 ? '' : 's'}`
     : 'identical'
 
-  if (!added && !removed) status('The two sides are identical', 'ok')
+  if (truncated) status(`Showing the first ${RENDER_LIMIT.toLocaleString()} ${unit}s — the counts above cover all of it`, 'info')
+  else if (!added && !removed) status('The two sides are identical', 'ok')
   else clearStatus()
 }
 

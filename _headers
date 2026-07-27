@@ -1,0 +1,26 @@
+# Response headers for the Cloudflare Worker that serves ./_site. Jekyll skips
+# files starting with an underscore, so `include: [_headers]` in _config.yml is
+# what gets this copied into the build output where the Worker can read it.
+#
+# The point of the policy below is the promise the tools make: nothing you paste
+# leaves the page. `connect-src 'none'` (inherited from default-src) means the
+# browser itself refuses to let this origin open a fetch, XHR or WebSocket to
+# anywhere at all — so even a compromised script could not exfiltrate what you
+# typed. Everything the site actually loads is enumerated:
+#
+#   script-src  the tool modules and the regex worker, all same-origin
+#   style-src   one stylesheet, plus the Google Fonts CSS the layout links
+#   font-src    where that CSS then fetches the font files from
+#   img-src     the SVG favicon; data: covers any inline image
+#
+# There are no inline scripts and no inline styles anywhere in the site — tool
+# spacing uses the .tool-gap classes rather than style attributes — so neither
+# 'unsafe-inline' nor a nonce is needed. Adding an inline style or script
+# without updating this file will silently stop working; add a class instead.
+/*
+  Content-Security-Policy: default-src 'none'; script-src 'self'; worker-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  Referrer-Policy: no-referrer
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Cross-Origin-Opener-Policy: same-origin
+  Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()

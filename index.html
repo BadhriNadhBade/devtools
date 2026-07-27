@@ -1,66 +1,146 @@
 ---
 title: DevTools
 layout: default
+type: index
 root: true
 description: Small developer tools that run entirely in your browser. Nothing you type ever leaves the page.
 ---
 
-<p>
-  The handful of developer tools I reach for often enough to want a permanent home for. Each one runs entirely in your browser — no uploads, no accounts, no analytics.
-</p>
-
-<div class="tool-search">
-  <label class="tool-label monospace" for="search">Filter</label>
-  <input type="search" class="tool-text" id="search" placeholder="base64, regex, uuid…" autocomplete="off" autocapitalize="off" spellcheck="false">
-</div>
-
-<p class="tool-empty" id="empty" hidden>Nothing matches that.</p>
-
 {% comment %}
-  Destination for pinned tools. Empty in the markup and filled by the index
-  script, which moves the rows themselves rather than cloning them — a tool is
-  only ever in the DOM once, so nothing can drift out of sync. Stays hidden
-  until something is pinned, and with JavaScript off it never appears at all.
+  One sprite for the whole index. Each tool names its icon in front matter
+  (`icon: network`), so adding a tool means adding a symbol here and a line
+  there — nothing else has to know about it. Inline rather than an external
+  file so the icons inherit `currentColor` and survive with no extra request.
 {% endcomment %}
-<section class="tool-category" id="pinned" data-category hidden>
-  <h2 class="normal-heading">Pinned</h2>
-  <ul class="tool-list" id="pinned-list"></ul>
-</section>
+<svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-network" viewBox="0 0 24 24"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></symbol>
+  <symbol id="i-hash" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M10.5 8 9 16"/><path d="M15 8l-1.5 8"/><path d="M8 10.5h8"/><path d="M7.5 13.5h8"/></symbol>
+  <symbol id="i-token" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="3"/><path d="M7 12h.01"/><path d="M12 12h.01"/><path d="M17 12h.01"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="15.5" cy="8.5" r="5.5"/><path d="M11.6 12.4 3 21v2"/><path d="M7 17l2.5 2.5"/><path d="M15.5 8.5h.01"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="14" height="14" rx="2"/><path d="M4 16a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></symbol>
+  <symbol id="i-dice" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 8h.01"/><path d="M16 8h.01"/><path d="M12 12h.01"/><path d="M8 16h.01"/><path d="M16 16h.01"/></symbol>
+  <symbol id="i-braces" viewBox="0 0 24 24"><path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5a2 2 0 0 0 2 2h1"/><path d="M16 21h1a2 2 0 0 0 2-2v-5a2 2 0 0 1 2-2 2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/></symbol>
+  <symbol id="i-terminal" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="m7 11 2-2-2-2"/><path d="M11 13h5"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h6"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6-5.4-2.9-5.4 2.9 1-6L3.2 9.4l6.1-.9z"/></symbol>
+  <symbol id="i-panel" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></symbol>
+</svg>
 
-{% comment %}
-  Both the index and the pages themselves come from the _tools collection, so
-  a new tool shows up here the moment its file exists.
-{% endcomment %}
-{% for category in site.tool_categories %}
-  {% assign tools = site.tools | where: "category", category | sort: "title" %}
-  {% if tools.size > 0 %}
-    <section class="tool-category" data-category>
-      <h2 class="normal-heading">{{ category }}</h2>
-      <ul class="tool-list">
-        {% for tool in tools %}
-          {% comment %}
-            Title, keywords and description all go into the haystack, lowercased
-            here so the filter can compare against a lowercased query without
-            depending on how any one tool happened to write its keywords.
-          {% endcomment %}
-          {% capture haystack %}{{ tool.title }} {{ tool.keywords }} {{ tool.description }}{% endcapture %}
-          <li data-search="{{ haystack | downcase | escape }}" data-slug="{{ tool.slug }}">
-            <div class="tool-row">
-              <a class="tool-pill" href="{{ tool.url }}">{{ tool.title }}</a>
-              {% comment %}
-                Hidden until the script unhides it: pinning is localStorage, so
-                without JavaScript this button could not do anything and should
-                not be offered.
-              {% endcomment %}
-              <button type="button" class="tool-pin" data-pin aria-pressed="false" aria-label="Pin {{ tool.title }}" hidden>☆</button>
-            </div>
-            <div class="desc">{{ tool.description }}</div>
+<div class="index">
+  {% comment %}
+    Hidden in the markup and only ever opened by the script: the panel's whole
+    job is filtering, which is JavaScript, so with it off there is nothing
+    behind the button and the full list is already on screen.
+  {% endcomment %}
+  <button type="button" class="index-toggle" id="nav-toggle" aria-expanded="false" aria-controls="nav" aria-label="Show navigation" hidden>
+    <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-panel"></use></svg>
+  </button>
+
+  <div class="index-body">
+    <nav class="index-nav" id="nav" aria-label="Tool categories" hidden>
+      <ul>
+        <li>
+          <button type="button" class="index-nav-item" data-filter="all" aria-current="true">
+            <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-grid"></use></svg>
+            All Tools
+          </button>
+        </li>
+        {% for category in site.tool_categories %}
+          {% case category %}
+            {% when 'Encoding' %}{% assign category_icon = 'i-network' %}
+            {% when 'Text' %}{% assign category_icon = 'i-file' %}
+            {% when 'Formatting' %}{% assign category_icon = 'i-list' %}
+            {% else %}{% assign category_icon = 'i-grid' %}
+          {% endcase %}
+          <li>
+            <button type="button" class="index-nav-item" data-filter="category" data-category-name="{{ category }}">
+              <svg class="icon" aria-hidden="true" focusable="false"><use href="#{{ category_icon }}"></use></svg>
+              {{ category }}
+            </button>
           </li>
         {% endfor %}
+        <li>
+          <button type="button" class="index-nav-item" data-filter="favorites">
+            <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-star"></use></svg>
+            Favorites
+          </button>
+        </li>
       </ul>
-    </section>
-  {% endif %}
-{% endfor %}
+    </nav>
+
+    <div class="index-main">
+      <div class="tool-search">
+        <svg class="icon tool-search-icon" aria-hidden="true" focusable="false"><use href="#i-search"></use></svg>
+        <label class="visually-hidden" for="search">Filter tools</label>
+        <input type="search" class="tool-text tool-search-input" id="search" placeholder="Filter base64, regex, uuid, and more…" autocomplete="off" autocapitalize="off" spellcheck="false">
+      </div>
+
+      <p class="tool-empty" id="empty" hidden>Nothing matches that.</p>
+
+      {% comment %}
+        Destination for pinned tools. Empty in the markup and filled by the index
+        script, which moves the cards themselves rather than cloning them — a tool
+        is only ever in the DOM once, so nothing can drift out of sync. Stays
+        hidden until something is pinned, and with JavaScript off it never
+        appears at all.
+      {% endcomment %}
+      <section class="tool-category" id="pinned" data-category hidden>
+        <h2 class="normal-heading">Favorites</h2>
+        <ul class="tool-list" id="pinned-list"></ul>
+      </section>
+
+      {% comment %}
+        Both the index and the pages themselves come from the _tools collection,
+        so a new tool shows up here the moment its file exists.
+      {% endcomment %}
+      {% for category in site.tool_categories %}
+        {% assign tools = site.tools | where: "category", category | sort: "title" %}
+        {% if tools.size > 0 %}
+          <section class="tool-category" data-category>
+            <h2 class="normal-heading">{{ category }}</h2>
+            <ul class="tool-list">
+              {% for tool in tools %}
+                {% comment %}
+                  Title, keywords and description all go into the haystack,
+                  lowercased here so the filter can compare against a lowercased
+                  query without depending on how any one tool happened to write
+                  its keywords.
+                {% endcomment %}
+                {% capture haystack %}{{ tool.title }} {{ tool.keywords }} {{ tool.description }}{% endcapture %}
+                <li data-search="{{ haystack | downcase | escape }}" data-slug="{{ tool.slug }}" data-category-name="{{ tool.category }}">
+                  <a class="tool-card" href="{{ tool.url }}">
+                    <span class="tool-card-icon">
+                      <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-{{ tool.icon | default: 'grid' }}"></use></svg>
+                    </span>
+                    <span class="tool-card-text">
+                      <span class="tool-card-title">{{ tool.title }}</span>
+                      <span class="desc">{{ tool.description }}</span>
+                    </span>
+                  </a>
+                  {% comment %}
+                    Hidden until the script unhides it: pinning is localStorage,
+                    so without JavaScript this button could not do anything and
+                    should not be offered. It sits outside the card link rather
+                    than inside it — a button nested in an anchor is neither
+                    valid nor reliably clickable.
+                  {% endcomment %}
+                  <button type="button" class="tool-pin" data-pin aria-pressed="false" aria-label="Pin {{ tool.title }}" hidden>
+                    <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-star"></use></svg>
+                  </button>
+                </li>
+              {% endfor %}
+            </ul>
+          </section>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+</div>
 
 <hr class="hr">
 

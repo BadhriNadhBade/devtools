@@ -31,9 +31,8 @@ function row(algorithm, value) {
   // Per-row copy, because wanting one specific digest is the normal case.
   const button = document.createElement('button')
   button.type = 'button'
-  button.className = 'tool-button--ghost monospace'
+  button.className = 'tool-button--ghost monospace tool-copy-inline'
   button.textContent = 'Copy'
-  button.style.marginLeft = '.8em'
   button.addEventListener('click', async () => {
     try {
       await copyText(value)
