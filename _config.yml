@@ -41,6 +41,12 @@ commonmark:
   options: ["UNSAFE", "HARDBREAKS"]
   extensions: ["strikethrough", "autolink", "table"]
 
+# Jekyll skips anything beginning with an underscore, which would otherwise
+# leave the response headers behind at build time. The Worker reads this file
+# from the root of the served directory.
+include:
+  - _headers
+
 exclude:
   - README.md
   - start

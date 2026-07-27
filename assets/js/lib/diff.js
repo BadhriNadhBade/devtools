@@ -77,7 +77,13 @@ export function diffTokens(a, b) {
 
   const out = []
   for (let i = 0; i < start; i++) out.push({ type: 'same', text: a[i] })
-  out.push(...middle(a.slice(start, aEnd), b.slice(start, bEnd)))
+
+  // Appended one at a time rather than spread into push: two large unrelated
+  // inputs can put hundreds of thousands of parts in here, and spreading an
+  // array that long overflows the argument limit — the diff would die with a
+  // stack overflow on exactly the input that needs it most.
+  for (const part of middle(a.slice(start, aEnd), b.slice(start, bEnd))) out.push(part)
+
   for (let i = aEnd; i < a.length; i++) out.push({ type: 'same', text: a[i] })
 
   return out

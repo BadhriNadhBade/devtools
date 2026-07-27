@@ -1,6 +1,7 @@
-// Filters the tool index as you type, and keeps pinned tools in a section at
-// the top. Everything is already in the DOM, so this only ever hides rows or
-// moves them between lists — no fetching, no rebuilding.
+// Filters the tool index as you type, narrows it to one category from the side
+// panel, and keeps pinned tools in a section at the top. Everything is already
+// in the DOM, so this only ever hides cards or moves them between lists — no
+// fetching, no rebuilding.
 
 import { $, $$ } from './lib/ui.js'
 
@@ -9,8 +10,12 @@ const empty = $('#empty')
 const items = $$('.tool-list li')
 const categories = $$('[data-category]')
 const pinnedList = $('#pinned-list')
+const nav = $('#nav')
+const navToggle = $('#nav-toggle')
+const navItems = $$('.index-nav-item')
 
 const STORE = 'devtools.pinned'
+const NAV_STORE = 'devtools.nav'
 
 // localStorage is not merely empty in some privacy modes — reading it throws.
 // A star that forgets is better than an index that fails to render.
@@ -65,10 +70,9 @@ function applyPins() {
   for (const item of items) {
     const isPinned = pins.includes(item.dataset.slug)
     const button = $('[data-pin]', item)
-    const title = $('.tool-pill', item).textContent.trim()
+    const title = $('.tool-card-title', item).textContent.trim()
 
     button.hidden = false
-    button.textContent = isPinned ? '★' : '☆'
     button.setAttribute('aria-pressed', String(isPinned))
     button.setAttribute('aria-label', `${isPinned ? 'Unpin' : 'Pin'} ${title}`)
   }
@@ -83,6 +87,16 @@ function toggle(item) {
   filter()
 }
 
+// Which of the side panel's entries is selected. "all" until something else is
+// picked, so the index reads the same with the panel closed as it always did.
+let view = { kind: 'all', category: null }
+
+function inView(item) {
+  if (view.kind === 'category') return item.dataset.categoryName === view.category
+  if (view.kind === 'favorites') return pins.includes(item.dataset.slug)
+  return true
+}
+
 function filter() {
   const query = search.value.trim().toLowerCase()
   const terms = query.split(/\s+/).filter(Boolean)
@@ -91,19 +105,63 @@ function filter() {
 
   for (const item of items) {
     const haystack = item.dataset.search
-    const matches = terms.every(term => haystack.includes(term))
+    const matches = inView(item) && terms.every(term => haystack.includes(term))
     item.hidden = !matches
     if (matches) visible++
   }
 
-  // Hide a heading once every tool under it is filtered out. The Pinned
-  // section falls out of the same rule: with no rows in it, nothing is
+  // Hide a heading once every tool under it is filtered out. The Favorites
+  // section falls out of the same rule: with no cards in it, nothing is
   // visible, so it stays hidden until something is pinned.
   for (const category of categories) {
     category.hidden = !$$('li', category).some(item => !item.hidden)
   }
 
+  // With nothing pinned, Favorites is empty by definition rather than because
+  // the query missed — say which.
+  empty.textContent =
+    view.kind === 'favorites' && pins.length === 0
+      ? 'Nothing pinned yet. Use the star on a tool to keep it here.'
+      : 'Nothing matches that.'
   empty.hidden = visible > 0
+}
+
+function select(button) {
+  view = { kind: button.dataset.filter, category: button.dataset.categoryName || null }
+
+  for (const item of navItems) {
+    item.setAttribute('aria-current', String(item === button))
+  }
+
+  filter()
+}
+
+// The panel starts closed, and stays wherever it was left. Reading storage can
+// throw in some privacy modes, and a panel that forgets is better than an index
+// that fails to render.
+function setNav(open) {
+  nav.hidden = !open
+  navToggle.setAttribute('aria-expanded', String(open))
+  navToggle.setAttribute('aria-label', open ? 'Hide navigation' : 'Show navigation')
+
+  try {
+    localStorage.setItem(NAV_STORE, open ? 'open' : 'closed')
+  } catch {
+    // Nothing to do: the panel just does not survive this session.
+  }
+}
+
+navToggle.hidden = false
+navToggle.addEventListener('click', () => setNav(nav.hidden))
+
+try {
+  if (localStorage.getItem(NAV_STORE) === 'open') setNav(true)
+} catch {
+  // Leave it closed.
+}
+
+for (const button of navItems) {
+  button.addEventListener('click', () => select(button))
 }
 
 for (const item of items) {

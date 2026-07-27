@@ -2,6 +2,7 @@
 layout: tool
 title: Regex Tester
 slug: regex-tester
+icon: braces
 permalink: /regex-tester
 category: Text
 description: Try a regular expression against sample text and see every match, its position and its capture groups as you type.
@@ -13,7 +14,7 @@ keywords: regex regexp regular expression match test pattern groups
   <input type="text" class="tool-text tool-text--mono" id="pattern" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="\w+@\w+\.\w+">
 </div>
 
-<div class="tool-controls" style="margin-top: 1em">
+<div class="tool-controls tool-gap-s">
   <span class="tool-label monospace">Flags</span>
   <label class="tool-check"><input type="checkbox" class="flag" value="g" checked> <span class="monospace">g</span> global</label>
   <label class="tool-check"><input type="checkbox" class="flag" value="i"> <span class="monospace">i</span> ignore case</label>
@@ -23,7 +24,7 @@ keywords: regex regexp regular expression match test pattern groups
   <button type="button" class="tool-button--ghost monospace" id="sample">Sample</button>
 </div>
 
-<div class="tool-pane" style="margin-top: 1.5em">
+<div class="tool-pane tool-gap">
   <div class="tool-pane-head">
     <span class="tool-label monospace" id="input-label">Test text</span>
     <span class="tool-label monospace" id="count"></span>
@@ -31,23 +32,23 @@ keywords: regex regexp regular expression match test pattern groups
   <textarea class="tool-area tool-area--short" id="input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="input-label"></textarea>
 </div>
 
-<div class="tool-pane" style="margin-top: 1.5em">
+<div class="tool-pane tool-gap">
   <div class="tool-pane-head">
     <span class="tool-label monospace" id="highlight-label">Matches in context</span>
   </div>
   <pre class="tool-out tool-out--wrap" id="highlight" aria-labelledby="highlight-label"></pre>
 </div>
 
-<div class="tool-pane" style="margin-top: 1.5em">
+<div class="tool-pane tool-gap">
   <div class="tool-pane-head">
     <span class="tool-label monospace" id="matches-label">Match list</span>
   </div>
   <div id="matches" aria-labelledby="matches-label"></div>
 </div>
 
-<details style="margin-top: 2em">
+<details class="tool-gap-l">
   <summary class="monospace smol">Cheatsheet</summary>
-  <dl class="tool-kv" style="margin-top: 1em">
+  <dl class="tool-kv tool-gap-s">
     <dt>.</dt><dd>any character except newline</dd>
     <dt>\w \d \s</dt><dd>word, digit, whitespace</dd>
     <dt>\W \D \S</dt><dd>not word, digit, whitespace</dd>

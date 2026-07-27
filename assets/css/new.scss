@@ -132,6 +132,16 @@ footer {
   }
 }
 
+// The index runs a navigation panel beside a two-column grid of cards, which
+// needs more room again than a single tool does.
+[data-page-type="index"] {
+  header,
+  main,
+  footer {
+    max-width: 62em;
+  }
+}
+
 h1, h2, h3, h4, h5, h6 {
   margin: 1.4em 0 1em 0;
   font-weight: 300;
@@ -233,71 +243,292 @@ nav {
   display: none !important;
 }
 
+// For labels that only the screen reader needs — the filter field says what it
+// is in its placeholder, but a placeholder is not a label.
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+
+// ---------------------------------------------------------------------------
+// Icons. One inline sprite lives at the top of the index; everything here just
+// sizes it. Stroked rather than filled so a single set works on both themes,
+// and `currentColor` so an icon takes the colour of whatever it sits in.
+// ---------------------------------------------------------------------------
+
+.sprite {
+  display: none;
+}
+
+.icon {
+  width: 1.25em;
+  height: 1.25em;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 
 // ---------------------------------------------------------------------------
 // Tool index
 // ---------------------------------------------------------------------------
 
-.tool-search {
-  margin: 1.5em 0 0;
+.index {
+  margin-top: 1.5em;
+}
+
+// The panel button sits above the panel it opens, in the corner it opens from.
+.index-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mutedTextColor);
+  background: transparent;
+  border: 0;
+  border-radius: .4em;
+  padding: .4em;
+  margin-bottom: .6em;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--linkColor);
+    background: var(--subtleBackgroundColor);
+  }
+
+  .icon {
+    width: 1.35em;
+    height: 1.35em;
+  }
+}
+
+.index-body {
   display: flex;
-  flex-direction: column;
-  gap: .3em;
+  align-items: flex-start;
+  gap: 1.5em;
+}
+
+.index-main {
+  flex: 1;
+  min-width: 0;
+}
+
+// Hidden by default — the button above brings it in. A fixed width keeps the
+// card grid from resizing as it opens and closes.
+.index-nav {
+  flex: none;
+  width: 11em;
+  position: sticky;
+  top: 1em;
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .15em;
+  }
+}
+
+.index-nav-item {
+  display: flex;
+  align-items: center;
+  gap: .6em;
+  width: 100%;
+  font-size: .85em;
+  text-align: left;
+  color: var(--secondaryTextColor);
+  background: transparent;
+  border: 0;
+  border-radius: .5em;
+  padding: .5em .7em;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--subtleBackgroundColor);
+  }
+
+  // The current filter, marked with aria-current so the styling and the
+  // announcement cannot disagree.
+  &[aria-current="true"] {
+    color: var(--linkColor);
+    background: var(--subtleBackgroundColor);
+  }
+}
+
+@media (max-width: 40em) {
+  .index-body {
+    flex-direction: column;
+  }
+
+  .index-nav {
+    width: 100%;
+    position: static;
+
+    ul {
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+  }
+
+  .index-nav-item {
+    width: auto;
+  }
+}
+
+.tool-search {
+  position: relative;
+  margin: 0;
+}
+
+.tool-search-icon {
+  position: absolute;
+  left: .8em;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--mutedTextColor);
+  pointer-events: none;
+}
+
+// Scoped through .tool-search on purpose: the shared `input.tool-text` rules
+// further down the file carry the same specificity, so without the extra class
+// they would win on source order and take the padding back.
+.tool-search input.tool-search-input {
+  border-radius: .6em;
+  padding: .7em .9em .7em 2.6em;
+  font-size: .95rem;
 }
 
 .tool-list {
   list-style: none;
   margin: 0;
   padding: 0;
+  display: grid;
+  // `min()` rather than a bare 17em: a track minimum wider than the container
+  // is not shrunk, so on a narrow phone a plain minmax() would push the whole
+  // page sideways.
+  grid-template-columns: repeat(auto-fill, minmax(min(17em, 100%), 1fr));
+  gap: .8em;
 
+  // Positioning context for the pin, which sits in the card's top-right corner
+  // but outside the link so it stays its own control.
   li {
-    margin-bottom: 1.2em;
-  }
-
-  .desc {
-    margin-top: .4em;
+    position: relative;
   }
 }
 
-// The tool name and its pin sit on one line; the description drops below.
-.tool-row {
+.tool-card {
+  display: flex;
+  align-items: flex-start;
+  gap: .8em;
+  height: 100%;
+  box-sizing: border-box;
+  text-decoration: none;
+  color: var(--textColor);
+  background: var(--backgroundColor);
+  border: 1px solid var(--borderColor);
+  border-radius: .7em;
+  // Room on the right for the pin to sit over the card without ever colliding
+  // with a long title.
+  padding: .9em 2.4em .9em 1em;
+
+  &:hover {
+    border-color: var(--linkColor);
+    background: var(--subtleBackgroundColor);
+  }
+}
+
+.tool-card-icon {
   display: flex;
   align-items: center;
-  gap: .4em;
-}
-
-.tool-pill {
-  @extend %pill;
-
-  display: inline-block;
-  text-decoration: none;
-  // Larger than the .7em the ghost buttons use. On the index these are the
-  // primary navigation rather than a secondary control beside a field.
-  font-size: .85em;
-}
-
-// Deliberately quiet: the star is a per-row affordance, not something that
-// should compete with the tool name beside it.
-.tool-pin {
-  font-size: .9em;
-  line-height: 1;
+  justify-content: center;
   color: var(--mutedTextColor);
+  margin-top: .1em;
+
+  .icon {
+    width: 1.6em;
+    height: 1.6em;
+  }
+}
+
+.tool-card:hover .tool-card-icon {
+  color: var(--linkColor);
+}
+
+.tool-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: .25em;
+  min-width: 0;
+}
+
+.tool-card-title {
+  font-size: .95em;
+  line-height: 1.3;
+}
+
+// Deliberately quiet and small: the star is a per-card affordance, not
+// something that should compete with the tool name beside it.
+.tool-pin {
+  position: absolute;
+  top: .6em;
+  right: .5em;
+  line-height: 1;
+  color: var(--borderColor);
   background: transparent;
   border: 0;
+  border-radius: .3em;
   padding: .25em;
   cursor: pointer;
 
-  &:hover,
+  .icon {
+    width: .95em;
+    height: .95em;
+  }
+
+  &:hover {
+    color: var(--linkColor);
+  }
+
+  // Pinned reads as a filled star, so the state survives without colour.
   &[aria-pressed="true"] {
     color: var(--linkColor);
+
+    .icon {
+      fill: currentColor;
+    }
   }
 }
 
+// The index's controls are all borderless, so they lean on the browser's own
+// focus ring; this only makes it follow the shape of the thing it is ringing.
+.index-toggle:focus-visible,
+.index-nav-item:focus-visible,
+.tool-pin:focus-visible,
+.tool-card:focus-visible {
+  outline: 2px solid var(--linkColor);
+  outline-offset: 2px;
+}
+
 .tool-category {
-  margin-top: 2.5em;
+  margin-top: 2em;
 
   &:first-of-type {
     margin-top: 1.5em;
+  }
+
+  .normal-heading {
+    display: block;
+    font-size: 1.1em;
+    margin-bottom: .7em;
   }
 }
 
@@ -718,4 +949,111 @@ mark.tool-match {
   font-size: .75em;
   line-height: 1.5;
   margin-top: 2em;
+}
+
+// Vertical rhythm between the blocks of a tool page. These were inline
+// `style="margin-top: …"` attributes; they live here so the site can ship a
+// Content-Security-Policy that forbids inline styles outright.
+.tool-gap-s { margin-top: 1em; }
+.tool-gap { margin-top: 1.5em; }
+.tool-gap-l { margin-top: 2em; }
+
+// The per-digest copy button, beside the value it copies.
+.tool-copy-inline {
+  margin-left: .8em;
+}
+
+
+// ---------------------------------------------------------------------------
+// Phones. The desktop rules above are the baseline; everything here is about
+// fitting a 320px-wide screen and a finger rather than a pointer.
+// ---------------------------------------------------------------------------
+
+// Nothing may push the page sideways. Deliberately not `overflow-x: hidden` on
+// the body — that would make it the scroll container and stop the index panel
+// from sticking — so each thing that can be arbitrarily wide handles itself:
+// `.tool-out` scrolls, `.tool-kv` breaks anywhere, and a table's cells get the
+// break opportunity a long match or digest does not have on its own.
+.tool-table td {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 34em) {
+  // Padding only — the type scale is the site's identity and stays put.
+  body {
+    padding: 0 1.1em;
+  }
+
+  header {
+    padding-top: 1.6em;
+  }
+
+  footer {
+    padding-bottom: 1.6em;
+  }
+
+  .hr {
+    margin: 2em 0;
+  }
+
+  // iOS zooms the viewport when a focused field's text is under 16px, which
+  // leaves the page scrolled sideways and the layout apparently broken. These
+  // are the only fields on the site, and 16px is the threshold.
+  textarea.tool-area,
+  input.tool-text,
+  select.tool-select,
+  .tool-search input.tool-search-input {
+    font-size: 16px;
+  }
+
+  textarea.tool-area {
+    min-height: 10em;
+  }
+
+  // Two panes stacked on a phone means twice the scrolling before the output
+  // is even in view, so each one gets shorter. The element selector is not
+  // decoration: without it this loses to `textarea.tool-area` above.
+  textarea.tool-area--short {
+    min-height: 6em;
+  }
+
+  // Long keys (`\t \n \r`, a JWT claim name) get their own line rather than
+  // squeezing the value into a two-character column.
+  .tool-kv {
+    grid-template-columns: 1fr;
+    gap: 0;
+
+    dd {
+      margin-bottom: .6em;
+    }
+  }
+
+  // Five flag checkboxes and a mode switch do not fit across a phone. The
+  // control already scrolls; tightening the gap means less of it has to.
+  .tool-seg {
+    gap: .4em;
+  }
+
+  .tool-controls {
+    gap: .6em;
+  }
+}
+
+// Touch targets. A pointer can hit a 16px star; a finger needs about 44px, so
+// the pin grows a transparent hit area instead of growing visually.
+@media (pointer: coarse) {
+  .tool-pin {
+    top: .25em;
+    right: .15em;
+    padding: .7em;
+  }
+
+  .tool-card {
+    padding-right: 3em;
+  }
+
+  .index-toggle,
+  .index-nav-item {
+    padding: .7em;
+  }
 }

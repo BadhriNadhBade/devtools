@@ -2,6 +2,7 @@
 layout: tool
 title: Word Counter
 slug: word-counter
+icon: terminal
 permalink: /word-counter
 category: Text
 description: Count words, characters, sentences and paragraphs as you type, and see which words you lean on most.
@@ -20,9 +21,9 @@ keywords: word count character count text statistics frequency reading time
   <textarea class="tool-area" id="input" spellcheck="false" aria-labelledby="input-label"></textarea>
 </div>
 
-<dl class="tool-stats" id="stats" style="margin-top: 1.5em"></dl>
+<dl class="tool-stats tool-gap" id="stats"></dl>
 
-<div class="tool-pane" style="margin-top: 2em">
+<div class="tool-pane tool-gap-l">
   <div class="tool-pane-head">
     <span class="tool-label monospace" id="frequency-label">Most used words</span>
     <label class="tool-check">
