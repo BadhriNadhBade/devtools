@@ -32,8 +32,14 @@ html { font-size: 100%; font: -apple-system-body; }
   // Added for this site. badhrinadh.com has no diff views, so there was
   // nothing to inherit. Deletions reuse the hearted background, which is
   // already the palette's red; additions are its green counterpart.
+  //
+  // Two steps of each: the pale one tints a whole changed line, the deeper one
+  // picks out the words inside it that actually moved. Both are the same hue,
+  // so a line reads as one change rather than two.
   --addedBackgroundColor: #e3f7e3;
   --removedBackgroundColor: var(--heartedBackgroundColor);
+  --addedInlineColor: #a7e2ab;
+  --removedInlineColor: #f7b4b4;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -56,6 +62,8 @@ html { font-size: 100%; font: -apple-system-body; }
 
     --addedBackgroundColor: #1f4522;
     --removedBackgroundColor: var(--heartedBackgroundColor);
+    --addedInlineColor: #35743a;
+    --removedInlineColor: #9c3535;
   }
 }
 
@@ -751,6 +759,12 @@ select.tool-select {
   padding: 0 0.5em;
   box-sizing: border-box;
 
+  // `inline-flex` above would otherwise win over the attribute, and a tool
+  // that hides a mode switch it cannot honour needs it to actually go.
+  &[hidden] {
+    display: none;
+  }
+
   label {
     color: var(--mutedTextColor);
     padding: 0.5em;
@@ -899,7 +913,13 @@ mark.tool-match {
 
 .tool-diff {
   display: block;
+}
 
+// Shared by the two views that render the diff as one stream of text. The
+// side-by-side view below builds its own rows out of spans, so it is
+// deliberately left out of this — the padding here would break its columns.
+.tool-diff--lines,
+.tool-diff--words {
   ins, del, span {
     text-decoration: none;
     padding: 0 .3em;
@@ -942,6 +962,100 @@ mark.tool-match {
 
   ins { text-decoration: underline; }
   del { text-decoration: line-through; }
+}
+
+// Side by side. One grid of four columns — number, text, number, text — so a
+// row's two halves are cells of the same grid row and cannot drift apart, and
+// wrapping a long line grows both halves together instead of only one. The
+// cells wrap rather than scroll: two columns of text that run off the right
+// edge would need the pane scrolled to read either of them.
+.tool-diff--split {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr);
+  padding: .4em 0;
+  white-space: normal;
+  // The rows are tinted edge to edge, so they have to be clipped back to the
+  // pane's own corners.
+  overflow: hidden;
+
+  .tool-diff-num {
+    padding: 0 .7em;
+    text-align: right;
+    color: var(--mutedTextColor);
+    font-variant-numeric: tabular-nums;
+    user-select: none;
+  }
+
+  // The seam between the two texts. It sits on the right-hand number column
+  // rather than between the columns so the tint of the line to its left runs
+  // all the way up to it.
+  .tool-diff-num--r {
+    border-left: 1px solid var(--borderColor);
+  }
+
+  .tool-diff-cell {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    padding-right: .7em;
+  }
+
+  // Same marker column as the unified view, for the same reason: it keeps the
+  // change legible to anyone who cannot separate the two fills, and gives a
+  // blank changed line something to occupy.
+  .tool-diff-cell--del:before { content: "- "; color: var(--mutedTextColor); }
+  .tool-diff-cell--add:before { content: "+ "; color: var(--mutedTextColor); }
+  .tool-diff-cell--same:before { content: "\00a0\00a0"; }
+
+  .tool-diff-num--del,
+  .tool-diff-cell--del {
+    background: var(--removedBackgroundColor);
+  }
+
+  .tool-diff-num--add,
+  .tool-diff-cell--add {
+    background: var(--addedBackgroundColor);
+  }
+
+  // The gap opposite a line the other side does not have. Hatched rather than
+  // left blank so it reads as “nothing here” instead of an empty line.
+  .tool-diff-num--empty,
+  .tool-diff-cell--empty {
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent 0 5px,
+      var(--borderColor) 5px 6px
+    );
+  }
+
+  // The words within a changed line that actually moved. A deeper step of the
+  // same colour as the line under them.
+  .tool-diff-word {
+    text-decoration: none;
+  }
+
+  ins.tool-diff-word { background: var(--addedInlineColor); }
+  del.tool-diff-word { background: var(--removedInlineColor); }
+}
+
+// Two columns of monospace do not fit across a phone, so the halves stack:
+// each changed line above its replacement, and unchanged lines shown once.
+// That is the unified view, reached by dropping cells rather than re-rendering
+// — the grid reflows the rest on its own.
+@media (max-width: 46em) {
+  .tool-diff--split {
+    grid-template-columns: auto minmax(0, 1fr);
+
+    .tool-diff-num--r {
+      border-left: 0;
+    }
+
+    .tool-diff-num--empty,
+    .tool-diff-cell--empty,
+    .tool-diff-num--r.tool-diff-num--same,
+    .tool-diff-cell--r.tool-diff-cell--same {
+      display: none;
+    }
+  }
 }
 
 .tool-note {
