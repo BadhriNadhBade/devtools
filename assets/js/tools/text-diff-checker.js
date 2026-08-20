@@ -1,10 +1,11 @@
 import { $, live, segment, status, clearStatus } from '../lib/ui.js'
-import { diffTokens, splitLines, splitWords, countChanges } from '../lib/diff.js'
+import { diffTokens, splitLines, splitWords, countChanges, alignRows } from '../lib/diff.js'
 
 const original = $('#original')
 const changed = $('#changed')
 const ignoreCase = $('#ignore-case')
 const ignoreWhitespace = $('#ignore-whitespace')
+const view = $('#view')
 const diffOut = $('#diff')
 const summary = $('#summary')
 
@@ -26,6 +27,7 @@ const SAMPLE_CHANGED = [
 ].join('\n')
 
 const readGranularity = segment('granularity', run)
+const readView = segment('view', run)
 
 // What gets compared, as opposed to what gets displayed. The diff runs over
 // these keys so "ignore case" can change the comparison without changing the
@@ -42,27 +44,123 @@ function key(token) {
 // The summary below the view still counts every change.
 const RENDER_LIMIT = 20000
 
-function render(parts, byWord) {
-  diffOut.replaceChildren()
+// A paired row shows which words moved as well as which lines did. Past this
+// many words on a side the second diff stops earning its cost, and the line
+// tint alone carries the change.
+const INLINE_LIMIT = 400
+
+function mark(type, text) {
+  const element = document.createElement(type === 'del' ? 'del' : 'ins')
+  element.className = 'tool-diff-word'
+  element.textContent = text
+  return element
+}
+
+// Diffs the two halves of a changed row against each other and returns both
+// cells' contents, with only the words that actually moved marked up. One diff
+// serves both sides: its deletions belong to the left cell, its additions to
+// the right, and the parts they share are the text around them.
+function inlinePair(left, right) {
+  const a = splitWords(left)
+  const b = splitWords(right)
+
+  if (a.length > INLINE_LIMIT || b.length > INLINE_LIMIT) return [left, right]
+
+  const parts = diffTokens(a.map(key), b.map(key))
+
+  // Two lines with nothing in common at all diff into one solid block of
+  // highlight, which says no more than the line tint already does.
+  if (!parts.some(part => part.type === 'same')) return [left, right]
+
+  const leftCell = document.createDocumentFragment()
+  const rightCell = document.createDocumentFragment()
+  let i = 0
+  let j = 0
+
+  for (const part of parts) {
+    if (part.type === 'del') leftCell.append(mark('del', a[i++]))
+    else if (part.type === 'add') rightCell.append(mark('add', b[j++]))
+    else {
+      leftCell.append(a[i++])
+      rightCell.append(b[j++])
+    }
+  }
+
+  return [leftCell, rightCell]
+}
+
+function gutter(number, side, kind) {
+  const element = document.createElement('span')
+  element.className = `tool-diff-num tool-diff-num--${side} tool-diff-num--${kind}`
+  // The numbers orient the eye; read aloud in sequence they only get in the
+  // way of the text they are numbering.
+  element.setAttribute('aria-hidden', 'true')
+  if (number !== null) element.textContent = number
+  return element
+}
+
+function cell(content, side, kind) {
+  const element = document.createElement('span')
+  element.className = `tool-diff-cell tool-diff-cell--${side} tool-diff-cell--${kind}`
+  if (content !== null) element.append(content)
+  return element
+}
+
+// Side-by-side: each text keeps its own column and its own line numbers, and a
+// row's two halves always sit level because they are cells of one grid row.
+function renderSplit(rows) {
+  diffOut.className = 'tool-out tool-diff tool-diff--split'
+
+  const shown = rows.length > RENDER_LIMIT ? rows.slice(0, RENDER_LIMIT) : rows
+  const out = document.createDocumentFragment()
+
+  for (const row of shown) {
+    const paired = row.kind === 'change'
+    const [left, right] = paired ? inlinePair(row.left, row.right) : [row.left, row.right]
+
+    const leftKind = row.left === null ? 'empty' : row.kind === 'same' ? 'same' : 'del'
+    const rightKind = row.right === null ? 'empty' : row.kind === 'same' ? 'same' : 'add'
+
+    out.append(
+      gutter(row.leftNo, 'l', leftKind),
+      cell(left, 'l', leftKind),
+      gutter(row.rightNo, 'r', rightKind),
+      cell(right, 'r', rightKind)
+    )
+  }
+
+  diffOut.replaceChildren(out)
+  return shown.length < rows.length
+}
+
+// Unified: one stream of parts, the way `diff` prints it.
+function renderInline(parts, byWord) {
   // The two modes lay out differently enough — block rows versus reflowing
   // prose — that the stylesheet handles each on its own.
   diffOut.className = `tool-out tool-diff ${byWord ? 'tool-diff--words' : 'tool-diff--lines'}`
 
   const shown = parts.length > RENDER_LIMIT ? parts.slice(0, RENDER_LIMIT) : parts
+  const out = document.createDocumentFragment()
 
   for (const part of shown) {
     const element = document.createElement(
       part.type === 'add' ? 'ins' : part.type === 'del' ? 'del' : 'span'
     )
     element.textContent = part.text
-    diffOut.append(element)
+    out.append(element)
   }
 
+  diffOut.replaceChildren(out)
   return shown.length < parts.length
 }
 
 function run() {
   const byWord = readGranularity() === 'words'
+  // Word mode reflows as prose rather than laying out in rows, so there is
+  // nothing for two columns to line up against.
+  view.hidden = byWord
+  const sideBySide = !byWord && readView() === 'split'
+
   const split = byWord ? splitWords : splitLines
 
   const left = original.value
@@ -87,12 +185,15 @@ function run() {
   const display = parts.map(part => {
     if (part.type === 'del') return { type: 'del', text: a[i++] }
     if (part.type === 'add') return { type: 'add', text: b[j++] }
-    const text = a[i++]
-    j++
-    return { type: 'same', text }
+    // Both sides are kept for an unchanged part. The single-column views show
+    // the first; side by side shows each column its own, which is what makes
+    // "ignore case" honest about what each text actually says.
+    return { type: 'same', text: a[i++], right: b[j++] }
   })
 
-  const truncated = render(display, byWord)
+  const truncated = sideBySide
+    ? renderSplit(alignRows(display))
+    : renderInline(display, byWord)
 
   const { added, removed } = countChanges(parts)
   const unit = byWord ? 'word' : 'line'
@@ -100,7 +201,7 @@ function run() {
     ? `+${added} −${removed} ${unit}${added + removed === 1 ? '' : 's'}`
     : 'identical'
 
-  if (truncated) status(`Showing the first ${RENDER_LIMIT.toLocaleString()} ${unit}s — the counts above cover all of it`, 'info')
+  if (truncated) status(`Showing the first ${RENDER_LIMIT.toLocaleString()} ${sideBySide ? 'rows' : `${unit}s`} — the counts above cover all of it`, 'info')
   else if (!added && !removed) status('The two sides are identical', 'ok')
   else clearStatus()
 }

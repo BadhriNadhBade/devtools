@@ -104,3 +104,64 @@ export function countChanges(parts) {
   }
   return { added, removed, unchanged: parts.length - added - removed }
 }
+
+/**
+ * Pairs a linear diff into rows for a side-by-side view.
+ *
+ * A run of deletions followed by a run of additions is the same edit seen from
+ * both sides, so the two runs are zipped together into `change` rows. Whatever
+ * is left over when one run is longer becomes a one-sided row, and the empty
+ * half is rendered as a gap so the two columns stay level.
+ *
+ * An unchanged part may carry a `right`: two lines can match on the comparison
+ * keys without being the same string — "ignore case" is exactly that — and each
+ * column has to show what its own side actually says.
+ *
+ * @param {{type: 'same'|'add'|'del', text: string, right?: string}[]} parts
+ * @returns {{kind: 'same'|'change'|'del'|'add', left: string|null, right: string|null, leftNo: number|null, rightNo: number|null}[]}
+ */
+export function alignRows(parts) {
+  const rows = []
+  let leftNo = 0
+  let rightNo = 0
+  let i = 0
+
+  while (i < parts.length) {
+    if (parts[i].type === 'same') {
+      rows.push({
+        kind: 'same',
+        left: parts[i].text,
+        right: parts[i].right ?? parts[i].text,
+        leftNo: ++leftNo,
+        rightNo: ++rightNo
+      })
+      i++
+      continue
+    }
+
+    // Collect the whole run of changed parts at once. Sorting them into two
+    // buckets rather than reading them in order means the pairing holds
+    // whichever way round the diff happened to emit them.
+    const dels = []
+    const adds = []
+    while (i < parts.length && parts[i].type !== 'same') {
+      (parts[i].type === 'del' ? dels : adds).push(parts[i].text)
+      i++
+    }
+
+    for (let k = 0; k < Math.max(dels.length, adds.length); k++) {
+      const left = k < dels.length ? dels[k] : null
+      const right = k < adds.length ? adds[k] : null
+
+      rows.push({
+        kind: left !== null && right !== null ? 'change' : left !== null ? 'del' : 'add',
+        left,
+        right,
+        leftNo: left === null ? null : ++leftNo,
+        rightNo: right === null ? null : ++rightNo
+      })
+    }
+  }
+
+  return rows
+}
