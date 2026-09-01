@@ -3,6 +3,7 @@ import { $, live, segment, copyButton, download, status } from '../lib/ui.js'
 const output = $('#output')
 const quantity = $('#quantity')
 const uppercase = $('#uppercase')
+const noHyphens = $('#no-hyphens')
 const braces = $('#braces')
 const hint = $('#version-hint')
 
@@ -64,6 +65,7 @@ function generate() {
     values = Array.from({ length: count }, make)
   }
 
+  if (noHyphens.checked) values = values.map(value => value.replace(/-/g, ''))
   if (uppercase.checked) values = values.map(value => value.toUpperCase())
   if (braces.checked) values = values.map(value => `{${value}}`)
 
@@ -77,7 +79,7 @@ $('#download').addEventListener('click', () => {
   download('uuids.txt', output.value)
 })
 
-live([quantity, uppercase, braces], generate)
+live([quantity, noHyphens, uppercase, braces], generate)
 copyButton($('#copy'), () => output.value)
 
 hint.textContent = HINTS[readVersion()]
