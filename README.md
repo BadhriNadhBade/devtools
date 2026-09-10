@@ -58,7 +58,7 @@ _meta/                  robots.txt, humans.txt, sitemap.xml
 assets/css/new.scss     theme; the palette block is copied from the main site
 assets/img/             favicon
 assets/js/index.js      the index page's filter
-assets/js/lib/          shared modules (ui, md5, diff, lorem, yaml)
+assets/js/lib/          shared modules (ui, md5, diff, lorem, yaml, json)
 assets/js/tools/        one module per tool
 ```
 
