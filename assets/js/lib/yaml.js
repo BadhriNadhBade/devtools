@@ -70,6 +70,16 @@ function fail(ctx, message) {
   throw new Error(`Line ${Math.min(ctx.i + 1, ctx.lines.length)}: ${message}`)
 }
 
+// Whether any line carries a comment. Comments are the one thing parsing throws
+// away that writing cannot put back, so anything that rebuilds a document from
+// its structure owes the reader a warning first.
+export function hasComments(text) {
+  return String(text).replace(/\r\n?/g, '\n').split('\n').some(line => {
+    const content = line.slice(indentOf(line))
+    return stripComment(content) !== content.trimEnd()
+  })
+}
+
 function skipIgnorable(ctx) {
   while (ctx.i < ctx.lines.length) {
     const line = ctx.lines[ctx.i]

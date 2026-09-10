@@ -1,0 +1,86 @@
+---
+layout: tool
+title: JSON / YAML Formatter
+slug: json-yaml-formatter
+icon: align
+permalink: /json-yaml-formatter
+category: Formatting
+description: Check that a document is valid, say exactly where it is not, and lay it out again — indented, minified, or with its keys in order.
+keywords: json yaml yml format formatter lint linter validate validator pretty print beautify minify indent sort keys
+---
+
+<div class="tool-controls">
+  <div class="tool-seg" role="radiogroup" aria-label="Format">
+    <input type="radio" name="format" id="format-json" value="json" checked>
+    <label for="format-json">JSON</label>
+    <input type="radio" name="format" id="format-yaml" value="yaml">
+    <label for="format-yaml">YAML</label>
+  </div>
+
+  {% comment %}
+    Hidden rather than disabled when YAML is chosen. There is no minified YAML
+    to switch to, and a control that cannot do anything is worse than one that
+    is not there.
+  {% endcomment %}
+  <div class="tool-seg" role="radiogroup" aria-label="Style" id="style">
+    <input type="radio" name="style" id="style-pretty" value="pretty" checked>
+    <label for="style-pretty">Pretty</label>
+    <input type="radio" name="style" id="style-minify" value="minify">
+    <label for="style-minify">Minify</label>
+  </div>
+
+  <label class="tool-check" id="indent-field">
+    Indent
+    <select class="tool-select" id="indent">
+      <option value="2" selected>2 spaces</option>
+      <option value="4">4 spaces</option>
+      <option value="tab" id="indent-tab">Tab</option>
+    </select>
+  </label>
+
+  <label class="tool-check">
+    <input type="checkbox" id="sort">
+    Sort keys
+  </label>
+
+  <button type="button" class="tool-button--ghost monospace" id="sample">Sample</button>
+</div>
+
+<div class="tool-panes">
+  <div class="tool-pane">
+    <div class="tool-pane-head">
+      <span class="tool-label monospace" id="input-label">JSON</span>
+      <span class="tool-label monospace" id="input-size"></span>
+    </div>
+    <textarea class="tool-area" id="input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="input-label"></textarea>
+  </div>
+
+  <div class="tool-pane">
+    <div class="tool-pane-head">
+      <span class="tool-label monospace" id="output-label">Formatted</span>
+      <span class="tool-row">
+        <span class="tool-label monospace" id="output-size"></span>
+        <button type="button" class="tool-button--ghost monospace" id="copy">Copy</button>
+        <button type="button" class="tool-button--ghost monospace" id="download">Download</button>
+      </span>
+    </div>
+    <textarea class="tool-area" id="output" readonly spellcheck="false" aria-labelledby="output-label"></textarea>
+  </div>
+</div>
+
+{% comment %}
+  Everything here is valid input — a document that fails outright is reported on
+  the status line instead. These are the things that parse and still want
+  saying: a duplicate key, a number too large to survive a round trip, comments
+  about to be dropped.
+{% endcomment %}
+<div class="tool-pane tool-gap" id="findings" hidden>
+  <div class="tool-pane-head">
+    <span class="tool-label monospace" id="findings-label">Worth a look</span>
+  </div>
+  <dl class="tool-kv" id="findings-list" aria-labelledby="findings-label"></dl>
+</div>
+
+<p class="tool-note">
+  JSON is reformatted by changing whitespace and nothing else, so a number too long for a <code>double</code> and keys that a parser would reorder both come out exactly as they went in. YAML has to be rebuilt from its structure, which loses comments and blank lines — you will be told when there are any to lose.
+</p>
