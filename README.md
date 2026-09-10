@@ -58,7 +58,7 @@ _meta/                  robots.txt, humans.txt, sitemap.xml
 assets/css/new.scss     theme; the palette block is copied from the main site
 assets/img/             favicon
 assets/js/index.js      the index page's filter
-assets/js/lib/          shared modules (ui, md5, diff, lorem)
+assets/js/lib/          shared modules (ui, md5, diff, lorem, yaml)
 assets/js/tools/        one module per tool
 ```
 
@@ -90,6 +90,10 @@ Ported from [True Devtools](https://github.com/dathoangnd/truedevtools.com) by
 Dat Hoang, MIT licensed. The original is a React app built on Ant Design, Redux
 and Monaco; the behaviour carried over, none of the stack did. Intentional
 deviations are listed in [the colophon](https://devtools.badhrinadh.com/colophon).
+
+The JSON / YAML converter comes instead from the
+[Backstage toolbox plugin](https://github.com/drodil/backstage-plugin-toolbox)
+(MIT), which is where Backstage keeps its converters.
 
 ## Keeping the theme in sync
 
