@@ -18,6 +18,8 @@ What did carry over is the behaviour: which tools exist, what options they take,
 - **Hashes** come from Web Crypto instead of a bundled crypto library. MD5 is the exception — Web Crypto deliberately omits it, so it is implemented [in the repo](https://github.com/BadhriNadhBade/devtools/blob/main/assets/js/lib/md5.js).
 - **Random values** use `crypto.getRandomValues` with rejection sampling rather than `Math.random`, which is neither uniform nor unpredictable.
 
+One tool came from somewhere else entirely. The **JSON / YAML converter** follows the [Backstage toolbox plugin](https://github.com/drodil/backstage-plugin-toolbox), also MIT, down to the sample data. That plugin converts through the [`yaml`](https://github.com/eemeli/yaml) package, which is far larger than everything else on this site put together, so the reader and writer here are [written out by hand](https://github.com/BadhriNadhBade/devtools/blob/main/assets/js/lib/yaml.js) instead. They cover the YAML that configuration files are actually made of — block and flow collections, every scalar style, anchors, aliases and merge keys — they were built by checking both directions against `yaml` itself over a pile of real configuration files, and where they cannot read something they say so rather than guessing.
+
 ## Type
 
 Body text is [IBM Plex Sans](https://fonts.google.com/specimen/IBM+Plex+Sans). Everything a tool reads or writes is set in whatever monospace your system provides.

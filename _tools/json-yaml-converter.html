@@ -1,0 +1,60 @@
+---
+layout: tool
+title: JSON / YAML Converter
+slug: json-yaml-converter
+icon: swap
+permalink: /json-yaml-converter
+category: Formatting
+description: Turn JSON into YAML and YAML back into JSON, reading anchors, merge keys and block scalars the way a real parser does.
+keywords: json yaml yml convert converter config compose kubernetes serialize
+---
+
+<div class="tool-controls">
+  <div class="tool-seg" role="radiogroup" aria-label="Direction">
+    <input type="radio" name="direction" id="direction-to-yaml" value="to-yaml" checked>
+    <label for="direction-to-yaml">JSON &rarr; YAML</label>
+    <input type="radio" name="direction" id="direction-to-json" value="to-json">
+    <label for="direction-to-json">YAML &rarr; JSON</label>
+  </div>
+
+  <label class="tool-check">
+    Indent
+    <select class="tool-select" id="indent">
+      <option value="2" selected>2 spaces</option>
+      <option value="4">4 spaces</option>
+    </select>
+  </label>
+
+  <button type="button" class="tool-button--ghost monospace" id="sample">Sample</button>
+  <button type="button" class="tool-button--ghost monospace" id="swap">Swap</button>
+</div>
+
+<div class="tool-panes">
+  <div class="tool-pane">
+    <div class="tool-pane-head">
+      <span class="tool-label monospace" id="input-label">JSON</span>
+    </div>
+    <textarea class="tool-area" id="input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="input-label"></textarea>
+  </div>
+
+  <div class="tool-pane">
+    <div class="tool-pane-head">
+      <span class="tool-label monospace" id="output-label">YAML</span>
+      <span class="tool-row">
+        <button type="button" class="tool-button--ghost monospace" id="copy">Copy</button>
+        <button type="button" class="tool-button--ghost monospace" id="download">Download</button>
+      </span>
+    </div>
+    <textarea class="tool-area" id="output" readonly spellcheck="false" aria-labelledby="output-label"></textarea>
+  </div>
+</div>
+
+{% comment %}
+  Worth being upfront about. The reader here is a subset, not a full YAML
+  implementation, and the two places it will surprise someone are a stream of
+  several documents and the 1.1 booleans — `yes` and `off` are strings under
+  the schema every current parser uses, which is not what people expect.
+{% endcomment %}
+<p class="tool-note">
+  Plain scalars are resolved against the YAML 1.2 core schema, so <code>yes</code>, <code>off</code> and <code>2024-01-01</code> stay strings while <code>true</code>, <code>0x1f</code> and <code>1e3</code> do not. Anchors, aliases, merge keys and block scalars are all read; a stream holding more than one document is not, because JSON has nowhere to put the second one.
+</p>

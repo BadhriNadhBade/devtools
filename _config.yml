@@ -34,6 +34,7 @@ i18n:
 # Jekyll already owns `site.categories` for post categories.
 tool_categories:
   - Encoding
+  - Formatting
   - Text
 
 markdown: CommonMarkGhPages
