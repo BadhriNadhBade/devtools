@@ -1,13 +1,19 @@
-import { $, live, segment, status, clearStatus } from '../lib/ui.js'
-import { diffTokens, splitLines, splitWords, countChanges, alignRows } from '../lib/diff.js'
+import {
+  $, live, segment, status, clearStatus, copyButton, download, clearButton, clearField,
+  dropZone, readFileText, remember, shortcuts
+} from '../lib/ui.js'
+import { diffTokens, splitLines, splitWords, countChanges, alignRows, toUnifiedPatch } from '../lib/diff.js'
 
 const original = $('#original')
 const changed = $('#changed')
 const ignoreCase = $('#ignore-case')
 const ignoreWhitespace = $('#ignore-whitespace')
 const view = $('#view')
+const context = $('#context')
+const contextField = $('#context-field')
 const diffOut = $('#diff')
 const summary = $('#summary')
+const patchButton = $('#patch')
 
 const SAMPLE_ORIGINAL = [
   'The quick brown fox',
@@ -48,6 +54,10 @@ const RENDER_LIMIT = 20000
 // many words on a side the second diff stops earning its cost, and the line
 // tint alone carries the change.
 const INLINE_LIMIT = 400
+
+// Which folded runs have been opened by hand. Keyed by where the run starts,
+// which is stable for as long as the inputs are.
+let expanded = new Set()
 
 function mark(type, text) {
   const element = document.createElement(type === 'del' ? 'del' : 'ins')
@@ -106,15 +116,86 @@ function cell(content, side, kind) {
   return element
 }
 
+// One row standing in for a run of lines that did not change. Clicking it puts
+// the run back; nothing is lost, only deferred.
+function fold(at, count) {
+  const button = document.createElement('button')
+  button.type = 'button'
+  button.className = 'tool-diff-fold'
+  button.textContent = `⋯ ${count} unchanged line${count === 1 ? '' : 's'}`
+  button.setAttribute('aria-expanded', 'false')
+
+  button.addEventListener('click', () => {
+    expanded.add(at)
+    run()
+  })
+
+  return button
+}
+
+// Walks a list of unchanged/changed items and returns what to draw: the items
+// near a change, and a fold in place of every long run between them.
+//
+// Deliberately generic over what an item is — the side-by-side view passes
+// rows, the unified view passes parts — because the rule is the same either
+// way and only the rendering differs.
+function withFolds(items, isSame, lines) {
+  if (!lines) return items.map(item => ({ item }))
+
+  const out = []
+  let i = 0
+
+  while (i < items.length) {
+    if (!isSame(items[i])) {
+      out.push({ item: items[i] })
+      i++
+      continue
+    }
+
+    let end = i
+    while (end < items.length && isSame(items[end])) end++
+
+    const length = end - i
+    const first = i === 0
+    const last = end === items.length
+
+    // A run is only worth folding if hiding its middle saves more than the
+    // fold row costs. The head and tail of the file keep no context on the
+    // outside, so they can be folded closer to the edge.
+    const keepBefore = first ? 0 : lines
+    const keepAfter = last ? 0 : lines
+
+    if (length <= keepBefore + keepAfter + 1 || expanded.has(i)) {
+      for (let k = i; k < end; k++) out.push({ item: items[k] })
+      i = end
+      continue
+    }
+
+    for (let k = i; k < i + keepBefore; k++) out.push({ item: items[k] })
+    out.push({ fold: { at: i, count: length - keepBefore - keepAfter } })
+    for (let k = end - keepAfter; k < end; k++) out.push({ item: items[k] })
+
+    i = end
+  }
+
+  return out
+}
+
 // Side-by-side: each text keeps its own column and its own line numbers, and a
 // row's two halves always sit level because they are cells of one grid row.
-function renderSplit(rows) {
+function renderSplit(rows, lines) {
   diffOut.className = 'tool-out tool-diff tool-diff--split'
 
   const shown = rows.length > RENDER_LIMIT ? rows.slice(0, RENDER_LIMIT) : rows
   const out = document.createDocumentFragment()
 
-  for (const row of shown) {
+  for (const entry of withFolds(shown, row => row.kind === 'same', lines)) {
+    if (entry.fold) {
+      out.append(fold(entry.fold.at, entry.fold.count))
+      continue
+    }
+
+    const row = entry.item
     const paired = row.kind === 'change'
     const [left, right] = paired ? inlinePair(row.left, row.right) : [row.left, row.right]
 
@@ -134,7 +215,7 @@ function renderSplit(rows) {
 }
 
 // Unified: one stream of parts, the way `diff` prints it.
-function renderInline(parts, byWord) {
+function renderInline(parts, byWord, lines) {
   // The two modes lay out differently enough — block rows versus reflowing
   // prose — that the stylesheet handles each on its own.
   diffOut.className = `tool-out tool-diff ${byWord ? 'tool-diff--words' : 'tool-diff--lines'}`
@@ -142,7 +223,15 @@ function renderInline(parts, byWord) {
   const shown = parts.length > RENDER_LIMIT ? parts.slice(0, RENDER_LIMIT) : parts
   const out = document.createDocumentFragment()
 
-  for (const part of shown) {
+  // Prose reflows rather than sitting in rows, so there is nothing there a
+  // fold could stand in for.
+  for (const entry of withFolds(shown, part => part.type === 'same', byWord ? 0 : lines)) {
+    if (entry.fold) {
+      out.append(fold(entry.fold.at, entry.fold.count))
+      continue
+    }
+
+    const part = entry.item
     const element = document.createElement(
       part.type === 'add' ? 'ins' : part.type === 'del' ? 'del' : 'span'
     )
@@ -154,12 +243,20 @@ function renderInline(parts, byWord) {
   return shown.length < parts.length
 }
 
+// The diff as it was last computed, so the copy and patch buttons do not have
+// to run it again.
+let last = { parts: [], byWord: true }
+
 function run() {
   const byWord = readGranularity() === 'words'
   // Word mode reflows as prose rather than laying out in rows, so there is
-  // nothing for two columns to line up against.
+  // nothing for two columns to line up against, and nothing to fold.
   view.hidden = byWord
+  contextField.hidden = byWord
+  patchButton.hidden = byWord
+
   const sideBySide = !byWord && readView() === 'split'
+  const lines = Number(context.value)
 
   const split = byWord ? splitWords : splitLines
 
@@ -169,6 +266,7 @@ function run() {
   if (!left && !right) {
     diffOut.replaceChildren()
     summary.textContent = ''
+    last = { parts: [], byWord }
     clearStatus()
     return
   }
@@ -191,9 +289,11 @@ function run() {
     return { type: 'same', text: a[i++], right: b[j++] }
   })
 
+  last = { parts: display, byWord }
+
   const truncated = sideBySide
-    ? renderSplit(alignRows(display))
-    : renderInline(display, byWord)
+    ? renderSplit(alignRows(display), lines)
+    : renderInline(display, byWord, lines)
 
   const { added, removed } = countChanges(parts)
   const unit = byWord ? 'word' : 'line'
@@ -206,19 +306,62 @@ function run() {
   else clearStatus()
 }
 
+// Editing either side invalidates which runs were opened: the run that was at
+// row 40 is not the run that is there now.
+function reset() {
+  expanded = new Set()
+  run()
+}
+
+const patch = () => last.byWord
+  ? ''
+  : toUnifiedPatch(last.parts, { context: Number(context.value) || 3 })
+
 $('#sample').addEventListener('click', () => {
   original.value = SAMPLE_ORIGINAL
   changed.value = SAMPLE_CHANGED
-  run()
+  reset()
 })
 
 $('#swap').addEventListener('click', () => {
   const held = original.value
   original.value = changed.value
   changed.value = held
-  run()
+  reset()
 })
 
-live([original, changed, ignoreCase, ignoreWhitespace], run)
+patchButton.addEventListener('click', () => {
+  const text = patch()
+  if (!text) {
+    status('Nothing to write a patch from — the two sides are identical', 'info')
+    return
+  }
+  download('changes.patch', text, 'text/x-patch')
+})
+
+dropZone($('#original-pane'), async file => {
+  original.value = await readFileText(file)
+  reset()
+})
+
+dropZone($('#changed-pane'), async file => {
+  changed.value = await readFileText(file)
+  reset()
+})
+
+// Copying the diff means copying a patch — the rendered view carries colour
+// and line numbers that would paste as noise.
+copyButton($('#copy'), patch)
+
+clearButton($('#clear'), [original, changed], reset)
+shortcuts({ run: reset, clear: () => { clearField(original); clearField(changed); reset() } })
+
+live([original, changed, ignoreCase, ignoreWhitespace, context], reset)
+
+remember('devtools.diff', [
+  ignoreCase, ignoreWhitespace, context,
+  $('#granularity-lines'), $('#granularity-words'),
+  $('#view-split'), $('#view-unified')
+])
 
 run()

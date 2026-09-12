@@ -3,7 +3,7 @@
 // in the DOM, so this only ever hides cards or moves them between lists — no
 // fetching, no rebuilding.
 
-import { $, $$ } from './lib/ui.js'
+import { $, $$, readStore, writeStore } from './lib/ui.js'
 
 const search = $('#search')
 const empty = $('#empty')
@@ -17,23 +17,12 @@ const navItems = $$('.index-nav-item')
 const STORE = 'devtools.pinned'
 const NAV_STORE = 'devtools.nav'
 
-// localStorage is not merely empty in some privacy modes — reading it throws.
-// A star that forgets is better than an index that fails to render.
-function readPins() {
-  try {
-    const stored = JSON.parse(localStorage.getItem(STORE))
-    return Array.isArray(stored) ? stored : []
-  } catch {
-    return []
-  }
-}
-
-function writePins(slugs) {
-  try {
-    localStorage.setItem(STORE, JSON.stringify(slugs))
-  } catch {
-    // Nothing to do: pins just do not survive this session.
-  }
+// Reading localStorage is not merely empty in some privacy modes — it throws —
+// so both sides go through the shared helpers, which treat failure as "nothing
+// stored". A star that forgets is better than an index that fails to render.
+const readPins = () => {
+  const stored = readStore(STORE, [])
+  return Array.isArray(stored) ? stored : []
 }
 
 // Pin order is the order they were pinned in, so the top of the page stays
@@ -82,7 +71,7 @@ function toggle(item) {
   const slug = item.dataset.slug
   pins = pins.includes(slug) ? pins.filter(s => s !== slug) : [...pins, slug]
 
-  writePins(pins)
+  writeStore(STORE, pins)
   applyPins()
   filter()
 }
@@ -144,21 +133,13 @@ function setNav(open) {
   navToggle.setAttribute('aria-expanded', String(open))
   navToggle.setAttribute('aria-label', open ? 'Hide navigation' : 'Show navigation')
 
-  try {
-    localStorage.setItem(NAV_STORE, open ? 'open' : 'closed')
-  } catch {
-    // Nothing to do: the panel just does not survive this session.
-  }
+  writeStore(NAV_STORE, open ? 'open' : 'closed')
 }
 
 navToggle.hidden = false
 navToggle.addEventListener('click', () => setNav(nav.hidden))
 
-try {
-  if (localStorage.getItem(NAV_STORE) === 'open') setNav(true)
-} catch {
-  // Leave it closed.
-}
+if (readStore(NAV_STORE) === 'open') setNav(true)
 
 for (const button of navItems) {
   button.addEventListener('click', () => select(button))

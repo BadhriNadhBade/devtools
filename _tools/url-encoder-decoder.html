@@ -5,8 +5,8 @@ slug: url-encoder-decoder
 icon: link
 permalink: /url-encoder-decoder
 category: Encoding
-description: Percent-encode text for use in a URL, or decode it back. Choose whether to escape the characters that separate a URL's parts.
-keywords: url uri percent encode decode escape unescape encodeURIComponent
+description: Percent-encode text for a URL, decode it back, or pull an address apart into its pieces and edit its query one parameter at a time.
+keywords: url uri percent encode decode escape unescape encodeURIComponent query string parameters parse inspect punycode
 ---
 
 <div class="tool-controls">
@@ -15,14 +15,26 @@ keywords: url uri percent encode decode escape unescape encodeURIComponent
     <label for="mode-encode">Encode</label>
     <input type="radio" name="mode" id="mode-decode" value="decode">
     <label for="mode-decode">Decode</label>
+    <input type="radio" name="mode" id="mode-inspect" value="inspect">
+    <label for="mode-inspect">Inspect</label>
   </div>
 
-  <div class="tool-seg" role="radiogroup" aria-label="Scope">
+  <div class="tool-seg" role="radiogroup" aria-label="Scope" id="scope">
     <input type="radio" name="scope" id="scope-component" value="component" checked>
     <label for="scope-component">Component</label>
     <input type="radio" name="scope" id="scope-full" value="full">
     <label for="scope-full">Whole URL</label>
   </div>
+
+  {% comment %}
+    Form encoding is the one place `+` means a space rather than a plus, and
+    which of the two a given string wants is not something that can be read off
+    the string itself.
+  {% endcomment %}
+  <label class="tool-check" id="plus-field">
+    <input type="checkbox" id="plus">
+    <code>+</code> is a space
+  </label>
 </div>
 
 <p class="desc" id="scope-hint"></p>
@@ -31,7 +43,11 @@ keywords: url uri percent encode decode escape unescape encodeURIComponent
   <div class="tool-pane">
     <div class="tool-pane-head">
       <span class="tool-label monospace" id="input-label">Input</span>
-      <button type="button" class="tool-button--ghost monospace" id="sample">Sample</button>
+      <span class="tool-row">
+        <button type="button" class="tool-button--ghost monospace" id="paste">Paste</button>
+        <button type="button" class="tool-button--ghost monospace" id="clear">Clear</button>
+        <button type="button" class="tool-button--ghost monospace" id="sample">Sample</button>
+      </span>
     </div>
     <textarea class="tool-area" id="input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="input-label"></textarea>
   </div>
@@ -39,8 +55,37 @@ keywords: url uri percent encode decode escape unescape encodeURIComponent
   <div class="tool-pane">
     <div class="tool-pane-head">
       <span class="tool-label monospace" id="output-label">Output</span>
-      <button type="button" class="tool-button--ghost monospace" id="copy">Copy</button>
+      <span class="tool-row">
+        <button type="button" class="tool-button--ghost monospace" id="again" hidden>Decode again</button>
+        <button type="button" class="tool-button--ghost monospace" id="copy">Copy</button>
+      </span>
     </div>
     <textarea class="tool-area" id="output" readonly spellcheck="false" aria-labelledby="output-label"></textarea>
   </div>
 </div>
+
+{% comment %}
+  Inspect mode. The parts list is read-only — an address is what it is — but
+  the query table is not: editing a value there rewrites the URL above it,
+  which is the thing people actually open a URL parser to do.
+{% endcomment %}
+<div id="inspect" hidden>
+  <div class="tool-pane tool-gap">
+    <div class="tool-pane-head">
+      <span class="tool-label monospace" id="parts-label">Parts</span>
+    </div>
+    <dl class="tool-kv" id="parts" aria-labelledby="parts-label"></dl>
+  </div>
+
+  <div class="tool-pane tool-gap">
+    <div class="tool-pane-head">
+      <span class="tool-label monospace" id="params-label">Query</span>
+      <button type="button" class="tool-button--ghost monospace" id="add">Add parameter</button>
+    </div>
+    <div id="params" aria-labelledby="params-label"></div>
+  </div>
+</div>
+
+<p class="tool-note">
+  Inspect reads the address with the browser's own URL parser, so what you see here is what a browser would do with it — including the punycode an internationalised host is really sent as.
+</p>

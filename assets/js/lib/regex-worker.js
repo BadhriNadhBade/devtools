@@ -6,14 +6,11 @@
 // the only way back, so matching happens here and the page gives each run a
 // deadline.
 
-import matchAll from './regex-match.js'
+import { run } from './regex-match.js'
 
 self.onmessage = ({ data }) => {
   try {
-    self.postMessage({
-      id: data.id,
-      matches: matchAll(data.pattern, data.flags, data.text, data.limit)
-    })
+    self.postMessage({ id: data.id, ...run(data) })
   } catch (error) {
     self.postMessage({ id: data.id, error: error.message })
   }

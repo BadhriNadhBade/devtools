@@ -1171,3 +1171,332 @@ mark.tool-match {
     padding: .7em;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Files in. A pane that accepts a drop says so quietly under the box, and
+// says it loudly for the moment a file is actually over it.
+// ---------------------------------------------------------------------------
+
+.tool-hint {
+  color: var(--mutedTextColor);
+  font-size: 0.8em;
+  line-height: 1.5em;
+  margin: 0.4em 0 0;
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  flex-wrap: wrap;
+}
+
+// The drop hint is the quietest thing on the page until the pane is a target.
+[data-dropping] .tool-hint {
+  color: var(--linkColor);
+}
+
+.tool-pane[data-dropping] {
+  outline: 2px dashed var(--linkColor);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+// A loaded file, standing in for the text box it displaced.
+.tool-file {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6em;
+  margin: 0;
+  padding: 0.6em 0.8em;
+  background: var(--subtleBackgroundColor);
+  border: 1px solid var(--borderColor);
+  border-radius: 3px;
+  font-size: 0.85em;
+}
+
+.tool-preview {
+  margin: 0.8em 0 0;
+  text-align: center;
+
+  img {
+    max-width: 100%;
+    max-height: 16em;
+    // A transparent PNG on a page background it happens to match is invisible;
+    // the subtle surface at least gives it an edge.
+    background: var(--subtleBackgroundColor);
+    border: 1px solid var(--borderColor);
+    border-radius: 3px;
+  }
+
+  figcaption {
+    color: var(--mutedTextColor);
+    margin-top: 0.4em;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Result badges. A short verdict — verified, matched, expired — that has to
+// read as a verdict rather than as more output.
+// ---------------------------------------------------------------------------
+
+.tool-badge {
+  display: inline-block;
+  padding: 0.1em 0.6em;
+  border-radius: 999px;
+  border: 1px solid var(--borderColor);
+  font-size: 0.8em;
+  line-height: 1.6em;
+  white-space: nowrap;
+
+  &[data-kind="ok"] {
+    background: var(--addedBackgroundColor);
+    border-color: var(--addedInlineColor);
+  }
+
+  &[data-kind="err"] {
+    background: var(--removedBackgroundColor);
+    border-color: var(--removedInlineColor);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Meters. Used where a count is only meaningful against a limit — a tweet, an
+// SMS, a meta description.
+// ---------------------------------------------------------------------------
+
+.tool-meters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13em, 1fr));
+  gap: 0.6em 1.2em;
+  margin: 0;
+}
+
+.tool-meter {
+  font-size: 0.85em;
+
+  .tool-meter-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.6em;
+    color: var(--mutedTextColor);
+  }
+
+  // A real <progress>, so the value is an attribute rather than an inline
+  // style — the site's CSP forbids those — and assistive technology is told
+  // the number without any help from here. Colouring one means a different
+  // pseudo-element per engine; there is no shorthand that reaches both.
+  .tool-meter-bar {
+    appearance: none;
+    display: block;
+    width: 100%;
+    height: 4px;
+    border: 0;
+    border-radius: 2px;
+    background: var(--subtleBackgroundColor);
+    color: var(--hrColor);
+  }
+
+  .tool-meter-bar::-webkit-progress-bar {
+    background: var(--subtleBackgroundColor);
+    border-radius: 2px;
+  }
+
+  .tool-meter-bar::-webkit-progress-value {
+    background: var(--hrColor);
+    border-radius: 2px;
+  }
+
+  .tool-meter-bar::-moz-progress-bar {
+    background: var(--hrColor);
+    border-radius: 2px;
+  }
+
+  &[data-over] {
+    .tool-meter-head { color: var(--textColor); }
+    .tool-meter-bar { color: var(--removedInlineColor); }
+    .tool-meter-bar::-webkit-progress-value { background: var(--removedInlineColor); }
+    .tool-meter-bar::-moz-progress-bar { background: var(--removedInlineColor); }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// The formatter's tree. One <details> per container, so collapsing is the
+// browser's own behaviour and keyboard support comes with it.
+// ---------------------------------------------------------------------------
+
+.tool-tree {
+  font-family: var(--monospace);
+  font-size: 0.85em;
+  line-height: 1.7em;
+  max-height: 28em;
+  overflow: auto;
+  padding: 0.8em;
+  background: var(--subtleBackgroundColor);
+  border: 1px solid var(--borderColor);
+  border-radius: 3px;
+
+  details {
+    margin: 0;
+  }
+
+  summary {
+    cursor: pointer;
+    list-style: none;
+
+    &::-webkit-details-marker { display: none; }
+
+    &:before {
+      content: "▸";
+      display: inline-block;
+      width: 1em;
+      color: var(--mutedTextColor);
+    }
+  }
+
+  details[open] > summary:before {
+    content: "▾";
+  }
+
+  // Children line up under their parent's disclosure arrow rather than under
+  // the key, which is what makes depth readable at a glance.
+  .tool-tree-children {
+    padding-left: 1em;
+    border-left: 1px solid var(--borderColor);
+    margin-left: 0.35em;
+  }
+
+  .tool-tree-leaf {
+    padding-left: 1em;
+  }
+
+  .tool-tree-key { color: var(--textColor); }
+  .tool-tree-meta { color: var(--mutedTextColor); }
+  .tool-tree-string { color: var(--linkColor); }
+  .tool-tree-number,
+  .tool-tree-boolean,
+  .tool-tree-null { color: var(--secondaryTextColor); }
+}
+
+// The path of whatever is being pointed at, offered for copying.
+.tool-path {
+  font-family: var(--monospace);
+  font-size: 0.8em;
+  color: var(--mutedTextColor);
+}
+
+// ---------------------------------------------------------------------------
+// Collapsed runs in the diff. One row standing in for the lines either side of
+// a change that were never going to be read.
+// ---------------------------------------------------------------------------
+
+.tool-diff-fold {
+  grid-column: 1 / -1;
+  padding: 0.2em 0.6em;
+  color: var(--mutedTextColor);
+  background: var(--subtleBackgroundColor);
+  border-top: 1px solid var(--borderColor);
+  border-bottom: 1px solid var(--borderColor);
+  font-size: 0.85em;
+  cursor: pointer;
+  text-align: center;
+  width: 100%;
+  font-family: var(--monospace);
+  border-left: 0;
+  border-right: 0;
+
+  &:hover {
+    color: var(--textColor);
+  }
+}
+
+// The unified and line views are one column, not a grid, so the fold there is
+// a plain block.
+.tool-diff--lines .tool-diff-fold,
+.tool-diff--words .tool-diff-fold {
+  display: block;
+  margin: 0.2em 0;
+}
+
+// ---------------------------------------------------------------------------
+// A row of one-click presets — the regex library, the random string profiles.
+// Quieter than the segmented control, because picking one is a shortcut rather
+// than a mode.
+// ---------------------------------------------------------------------------
+
+.tool-presets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4em;
+  margin-top: 0.6em;
+}
+
+// A group of fields that belongs together but is not important enough to be a
+// pane of its own — a key and its algorithm, a delimiter and a column number.
+.tool-subcontrols {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6em 1em;
+  margin-top: 0.8em;
+  padding-top: 0.8em;
+  border-top: 1px solid var(--borderColor);
+}
+
+// Single-line fields that sit inside a control row rather than above a pane.
+.tool-text--inline {
+  max-width: 22em;
+}
+
+@media (max-width: 40em) {
+  .tool-meters {
+    grid-template-columns: 1fr;
+  }
+
+  .tool-subcontrols > * {
+    width: 100%;
+  }
+}
+
+// One editable query parameter: name, value, and the button that drops it.
+// The value gets the room because it is the half that is usually long.
+.tool-param {
+  display: grid;
+  grid-template-columns: minmax(6em, 1fr) minmax(8em, 2fr) auto;
+  gap: 0.5em;
+  margin-bottom: 0.5em;
+
+  input {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 40em) {
+  .tool-param {
+    grid-template-columns: 1fr auto;
+
+    input:first-child {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+// The tree's keys are buttons — clicking one yields its path — but they have
+// to read as keys, not as controls, so everything a button brings with it is
+// taken back off.
+.tool-tree-key {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}

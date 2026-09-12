@@ -5,24 +5,58 @@ slug: jwt-decoder
 icon: token
 permalink: /jwt-decoder
 category: Encoding
-description: Read the header and payload of a JSON Web Token, with the timestamp claims translated into dates you can read.
-keywords: jwt json web token decode bearer claims exp iat
+description: Read the header and payload of a JSON Web Token, translate its timestamps, and check the signature against a key you supply.
+keywords: jwt json web token decode verify signature bearer claims exp iat hmac rsa ecdsa jwk
 ---
 
 <div class="tool-controls">
   <button type="button" class="tool-button--ghost monospace" id="sample">Sample</button>
+  <button type="button" class="tool-button--ghost monospace" id="paste">Paste</button>
+  <button type="button" class="tool-button--ghost monospace" id="clear">Clear</button>
+  <button type="button" class="tool-button--ghost monospace" id="copy-header">Copy header</button>
   <button type="button" class="tool-button--ghost monospace" id="copy">Copy payload</button>
 </div>
 
 <div class="tool-pane">
   <div class="tool-pane-head">
     <span class="tool-label monospace" id="input-label">Token</span>
+    <span class="tool-row">
+      <span class="tool-label monospace" id="alg"></span>
+      <span class="tool-badge" id="verdict" hidden></span>
+    </span>
   </div>
   <textarea class="tool-area tool-area--short" id="input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="input-label" placeholder="eyJhbGciOi..."></textarea>
 </div>
 
+{% comment %}
+  The half of the job a decoder cannot do on its own. Kept below the token
+  rather than beside it: verifying is optional, and the page should still read
+  top to bottom for someone who only wants to look inside a token.
+{% endcomment %}
+<div class="tool-pane tool-gap">
+  <div class="tool-pane-head">
+    <span class="tool-label monospace" id="key-label">Key</span>
+    <span class="tool-label monospace" id="key-kind"></span>
+  </div>
+  <textarea class="tool-area tool-area--short" id="key" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="key-label" aria-describedby="key-hint" placeholder="the HMAC secret, a PEM public key, or a JWK"></textarea>
+  <p class="tool-hint smol" id="key-hint">
+    A shared secret for <code>HS*</code>, a <code>-----BEGIN PUBLIC KEY-----</code> block or a JWK for <code>RS*</code>, <code>PS*</code> and <code>ES*</code>. Leave it empty to decode without verifying.
+  </p>
+</div>
+
+<div class="tool-subcontrols">
+  <label class="tool-check">
+    Expected issuer
+    <input type="text" class="tool-text tool-text--mono tool-text--inline" id="expect-iss" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="iss">
+  </label>
+  <label class="tool-check">
+    Expected audience
+    <input type="text" class="tool-text tool-text--mono tool-text--inline" id="expect-aud" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="aud">
+  </label>
+</div>
+
 <div id="result" hidden>
-  <div class="tool-panes">
+  <div class="tool-panes tool-gap">
     <div class="tool-pane">
       <div class="tool-pane-head">
         <span class="tool-label monospace" id="header-label">Header</span>
@@ -47,9 +81,9 @@ keywords: jwt json web token decode bearer claims exp iat
 </div>
 
 {% comment %}
-  Worth stating plainly. A decoder reads the token; it cannot tell you whether
-  the token is genuine, and people do conflate the two.
+  Worth stating plainly even now that the tool can verify. Without a key it
+  reads the token and nothing more, and people do conflate the two.
 {% endcomment %}
 <p class="tool-note">
-  This decodes the token only. The signature is <strong>not</strong> verified — anyone can mint a token with any payload, so never trust a decoded claim without checking the signature against the issuer's key on your server.
+  With no key in the box this decodes the token and <strong>does not</strong> check it — anyone can mint a token with any payload. With a key it verifies the signature here, in this tab, against the algorithm the header names; a token that verifies against a key you fetched yourself is trustworthy, one that verifies against a key the token pointed you at is not.
 </p>

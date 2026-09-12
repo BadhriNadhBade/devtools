@@ -5,31 +5,66 @@ slug: word-counter
 icon: terminal
 permalink: /word-counter
 category: Text
-description: Count words, characters, sentences and paragraphs as you type, and see which words you lean on most.
-keywords: word count character count text statistics frequency reading time
+description: Count words, characters, sentences and paragraphs as you type, measure the text against the limits it has to fit, and see which words and phrases you lean on.
+keywords: word count character count text statistics frequency reading time readability flesch kincaid tweet meta description limit density phrases
 ---
 
 <div class="tool-controls">
   <button type="button" class="tool-button--ghost monospace" id="sample">Sample</button>
+  <button type="button" class="tool-button--ghost monospace" id="paste">Paste</button>
   <button type="button" class="tool-button--ghost monospace" id="clear">Clear</button>
+  <button type="button" class="tool-button--ghost monospace" id="open">Open file</button>
 </div>
 
-<div class="tool-pane">
+<div class="tool-pane" id="input-pane">
   <div class="tool-pane-head">
     <span class="tool-label monospace" id="input-label">Text</span>
+    <span class="tool-label monospace" id="selection"></span>
   </div>
-  <textarea class="tool-area" id="input" spellcheck="false" aria-labelledby="input-label"></textarea>
+  <textarea class="tool-area" id="input" spellcheck="false" aria-labelledby="input-label" aria-describedby="drop-hint"></textarea>
+  <p class="tool-hint smol" id="drop-hint">Drop a text file here to count it.</p>
 </div>
 
 <dl class="tool-stats tool-gap" id="stats"></dl>
 
+{% comment %}
+  A character count only means something against the limit it has to fit. These
+  four are the ones people are usually counting towards, and a bar says whether
+  it fits faster than a number does.
+{% endcomment %}
+<div class="tool-gap" id="targets" hidden>
+  <h2 class="normal-heading">Fits in</h2>
+  <div class="tool-meters" id="meters"></div>
+</div>
+
+{% comment %}
+  Both formulas are for English prose and say so. Run over a config file or a
+  shopping list they produce a number that means nothing, so they only appear
+  once there is enough text for them to be about something.
+{% endcomment %}
+<div class="tool-pane tool-gap-l" id="readability" hidden>
+  <div class="tool-pane-head">
+    <span class="tool-label monospace" id="readability-label">Readability</span>
+  </div>
+  <dl class="tool-kv" id="readability-list" aria-labelledby="readability-label"></dl>
+</div>
+
 <div class="tool-pane tool-gap-l">
   <div class="tool-pane-head">
-    <span class="tool-label monospace" id="frequency-label">Most used words</span>
-    <label class="tool-check">
-      <input type="checkbox" id="stopwords" checked>
-      Skip common words
-    </label>
+    <span class="tool-label monospace" id="frequency-label">Most used</span>
+    <span class="tool-row">
+      <label class="tool-check">
+        <select class="tool-select" id="gram">
+          <option value="1" selected>single words</option>
+          <option value="2">two-word phrases</option>
+          <option value="3">three-word phrases</option>
+        </select>
+      </label>
+      <label class="tool-check">
+        <input type="checkbox" id="stopwords" checked>
+        Skip common words
+      </label>
+    </span>
   </div>
   <div id="frequency" aria-labelledby="frequency-label"></div>
 </div>

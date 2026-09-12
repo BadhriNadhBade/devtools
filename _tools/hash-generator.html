@@ -5,23 +5,60 @@ slug: hash-generator
 icon: hash
 permalink: /hash-generator
 category: Encoding
-description: MD5, SHA-1, SHA-256, SHA-384 and SHA-512 digests of whatever you type, all at once.
-keywords: hash md5 sha1 sha256 sha384 sha512 checksum digest
+description: CRC32, MD5, SHA-1, SHA-256, SHA-384 and SHA-512 digests of text or a whole file — and a box to check one against the value you were given.
+keywords: hash md5 sha1 sha256 sha384 sha512 crc32 checksum digest hmac file verify
 ---
 
 <div class="tool-controls">
   <button type="button" class="tool-button--ghost monospace" id="sample">Sample</button>
+  <button type="button" class="tool-button--ghost monospace" id="open">Open file</button>
   <label class="tool-check">
     <input type="checkbox" id="uppercase">
     Uppercase
   </label>
+  <label class="tool-check">
+    <input type="checkbox" id="hmac">
+    HMAC
+  </label>
 </div>
 
-<div class="tool-pane">
+{% comment %}
+  Only in the way when HMAC is off, so it is not there then. The key is a
+  secret like any other, which is why this tool remembers none of its fields.
+{% endcomment %}
+<div class="tool-field" id="key-field" hidden>
+  <label class="tool-label monospace" for="key">Key</label>
+  <input type="text" class="tool-text tool-text--mono" id="key" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="the shared secret">
+</div>
+
+<div class="tool-pane" id="input-pane">
   <div class="tool-pane-head">
     <span class="tool-label monospace" id="input-label">Text</span>
+    <span class="tool-row">
+      <span class="tool-label monospace" id="input-size"></span>
+      <button type="button" class="tool-button--ghost monospace" id="paste">Paste</button>
+      <button type="button" class="tool-button--ghost monospace" id="clear">Clear</button>
+    </span>
   </div>
-  <textarea class="tool-area tool-area--short" id="input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="input-label"></textarea>
+
+  <p class="tool-file" id="source" hidden>
+    <span class="monospace" id="source-name"></span>
+    <button type="button" class="tool-button--ghost monospace" id="source-clear" aria-label="Remove the loaded file">Remove</button>
+  </p>
+
+  <textarea class="tool-area tool-area--short" id="input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="input-label" aria-describedby="drop-hint"></textarea>
+  <p class="tool-hint smol" id="drop-hint">Drop a file here to checksum it.</p>
+</div>
+
+{% comment %}
+  The reason most people are here: they have a digest from somewhere else and
+  want to know whether this file is that file. Takes a bare digest or a whole
+  line of `sha256sum` output, because that is what gets copied.
+{% endcomment %}
+<div class="tool-field tool-gap">
+  <label class="tool-label monospace" for="expected">Compare against</label>
+  <input type="text" class="tool-text tool-text--mono" id="expected" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="paste a digest you were given">
+  <p class="tool-hint smol" id="verdict" hidden></p>
 </div>
 
 <div class="tool-pane tool-gap">
@@ -32,5 +69,5 @@ keywords: hash md5 sha1 sha256 sha384 sha512 checksum digest
 </div>
 
 <p class="tool-note">
-  MD5 and SHA-1 are broken for anything security-related — treat them as checksums for matching against existing values, not as a way to protect data. For storing passwords use a purpose-built function like bcrypt or Argon2, never a raw digest.
+  CRC32 detects accidental corruption and nothing else. MD5 and SHA-1 are broken for anything security-related — treat all three as checksums for matching against existing values, not as a way to protect data. For storing passwords use a purpose-built function like bcrypt or Argon2, never a raw digest.
 </p>

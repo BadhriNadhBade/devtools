@@ -1,23 +1,42 @@
 ---
 layout: tool
-title: JSON / YAML Converter
+title: Structured Data Converter
 slug: json-yaml-converter
 icon: swap
 permalink: /json-yaml-converter
 category: Formatting
-description: Turn JSON into YAML and YAML back into JSON, reading anchors, merge keys and block scalars the way a real parser does.
-keywords: json yaml yml convert converter config compose kubernetes serialize
+description: Convert between JSON, YAML, TOML, XML, CSV, .env files and query strings, reading anchors, merge keys and quoted fields the way a real parser does.
+# "json yaml converter" stays in the keywords so the old name still finds this
+# from the filter, even though the tool now does more than the two.
+keywords: json yaml yml toml xml csv env dotenv query string convert converter config compose kubernetes serialize transform
 ---
 
 <div class="tool-controls">
-  <div class="tool-seg" role="radiogroup" aria-label="Direction">
-    <input type="radio" name="direction" id="direction-to-yaml" value="to-yaml" checked>
-    <label for="direction-to-yaml">JSON &rarr; YAML</label>
-    <input type="radio" name="direction" id="direction-to-json" value="to-json">
-    <label for="direction-to-json">YAML &rarr; JSON</label>
-  </div>
+  <label class="tool-check">
+    From
+    <select class="tool-select" id="from">
+      <option value="json" selected>JSON</option>
+      <option value="yaml">YAML</option>
+      <option value="csv">CSV</option>
+      <option value="env">.env</option>
+      <option value="query">Query string</option>
+    </select>
+  </label>
 
   <label class="tool-check">
+    To
+    <select class="tool-select" id="to">
+      <option value="yaml" selected>YAML</option>
+      <option value="json">JSON</option>
+      <option value="toml">TOML</option>
+      <option value="xml">XML</option>
+      <option value="csv">CSV</option>
+      <option value="env">.env</option>
+      <option value="query">Query string</option>
+    </select>
+  </label>
+
+  <label class="tool-check" id="indent-field">
     Indent
     <select class="tool-select" id="indent">
       <option value="2" selected>2 spaces</option>
@@ -27,14 +46,20 @@ keywords: json yaml yml convert converter config compose kubernetes serialize
 
   <button type="button" class="tool-button--ghost monospace" id="sample">Sample</button>
   <button type="button" class="tool-button--ghost monospace" id="swap">Swap</button>
+  <button type="button" class="tool-button--ghost monospace" id="open">Open file</button>
 </div>
 
 <div class="tool-panes">
-  <div class="tool-pane">
+  <div class="tool-pane" id="input-pane">
     <div class="tool-pane-head">
       <span class="tool-label monospace" id="input-label">JSON</span>
+      <span class="tool-row">
+        <button type="button" class="tool-button--ghost monospace" id="paste">Paste</button>
+        <button type="button" class="tool-button--ghost monospace" id="clear">Clear</button>
+      </span>
     </div>
-    <textarea class="tool-area" id="input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="input-label"></textarea>
+    <textarea class="tool-area" id="input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="input-label" aria-describedby="drop-hint"></textarea>
+    <p class="tool-hint smol" id="drop-hint">Drop a file here — the format is taken from its name.</p>
   </div>
 
   <div class="tool-pane">
@@ -50,11 +75,14 @@ keywords: json yaml yml convert converter config compose kubernetes serialize
 </div>
 
 {% comment %}
-  Worth being upfront about. The reader here is a subset, not a full YAML
-  implementation, and the two places it will surprise someone are a stream of
-  several documents and the 1.1 booleans — `yes` and `off` are strings under
-  the schema every current parser uses, which is not what people expect.
+  Worth being upfront about, in both directions. The YAML reader is a subset,
+  and the flat formats cannot hold what the nested ones can — so rather than
+  inventing an encoding nobody else reads back, each one says what it did.
 {% endcomment %}
 <p class="tool-note">
-  Plain scalars are resolved against the YAML 1.2 core schema, so <code>yes</code>, <code>off</code> and <code>2024-01-01</code> stay strings while <code>true</code>, <code>0x1f</code> and <code>1e3</code> do not. Anchors, aliases, merge keys and block scalars are all read; a stream holding more than one document is not, because JSON has nowhere to put the second one.
+  Plain YAML scalars are resolved against the 1.2 core schema, so <code>yes</code>, <code>off</code> and <code>2024-01-01</code> stay strings while <code>true</code>, <code>0x1f</code> and <code>1e3</code> do not. Anchors, aliases, merge keys and block scalars are all read; a stream holding more than one document is not, because JSON has nowhere to put the second one.
+</p>
+
+<p class="tool-note">
+  CSV is a table and will not hold a nested document — it says so rather than guessing. <code>.env</code> and query strings are flat, so a nested document is flattened into dotted or underscored keys on the way out, and comes back as those keys rather than as the structure it started with.
 </p>

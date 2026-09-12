@@ -5,8 +5,8 @@ slug: regex-tester
 icon: braces
 permalink: /regex-tester
 category: Text
-description: Try a regular expression against sample text and see every match, its position and its capture groups as you type.
-keywords: regex regexp regular expression match test pattern groups
+description: Try a regular expression against sample text and watch every match, capture group, substitution and split as you type.
+keywords: regex regexp regular expression match test pattern groups replace substitute split capture library
 ---
 
 <div class="tool-field">
@@ -15,6 +15,15 @@ keywords: regex regexp regular expression match test pattern groups
 </div>
 
 <div class="tool-controls tool-gap-s">
+  <div class="tool-seg" role="radiogroup" aria-label="Operation">
+    <input type="radio" name="op" id="op-match" value="match" checked>
+    <label for="op-match">Match</label>
+    <input type="radio" name="op" id="op-replace" value="replace">
+    <label for="op-replace">Replace</label>
+    <input type="radio" name="op" id="op-split" value="split">
+    <label for="op-split">Split</label>
+  </div>
+
   <span class="tool-label monospace">Flags</span>
   <label class="tool-check"><input type="checkbox" class="flag" value="g" checked> <span class="monospace">g</span> global</label>
   <label class="tool-check"><input type="checkbox" class="flag" value="i"> <span class="monospace">i</span> ignore case</label>
@@ -24,22 +33,60 @@ keywords: regex regexp regular expression match test pattern groups
   <button type="button" class="tool-button--ghost monospace" id="sample">Sample</button>
 </div>
 
-<div class="tool-pane tool-gap">
-  <div class="tool-pane-head">
-    <span class="tool-label monospace" id="input-label">Test text</span>
-    <span class="tool-label monospace" id="count"></span>
-  </div>
-  <textarea class="tool-area tool-area--short" id="input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="input-label"></textarea>
+{% comment %}
+  The patterns nobody should have to write from memory. Each one loads its own
+  text as well, so the result is visible the moment it is picked rather than
+  after finding something to try it on.
+{% endcomment %}
+<div class="tool-presets" id="library">
+  <span class="tool-label monospace">Library</span>
 </div>
 
-<div class="tool-pane tool-gap">
+{% comment %}
+  Only in the way when the operation is not a substitution, so it is not there
+  then. `$1` and `$<name>` mean what they mean in String.replace.
+{% endcomment %}
+<div class="tool-field tool-gap-s" id="replacement-field" hidden>
+  <label class="tool-label monospace" for="replacement">Replace with</label>
+  <input type="text" class="tool-text tool-text--mono" id="replacement" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="$1 — or $&amp;, $&lt;name&gt;, $$">
+</div>
+
+<div class="tool-pane tool-gap" id="input-pane">
+  <div class="tool-pane-head">
+    <span class="tool-label monospace" id="input-label">Test text</span>
+    <span class="tool-row">
+      <span class="tool-label monospace" id="count"></span>
+      <button type="button" class="tool-button--ghost monospace" id="paste">Paste</button>
+      <button type="button" class="tool-button--ghost monospace" id="clear">Clear</button>
+    </span>
+  </div>
+  <textarea class="tool-area tool-area--short" id="input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="input-label" aria-describedby="drop-hint"></textarea>
+  <p class="tool-hint smol" id="drop-hint">Drop a text file here to run the pattern over it.</p>
+</div>
+
+<div class="tool-pane tool-gap" id="highlight-pane">
   <div class="tool-pane-head">
     <span class="tool-label monospace" id="highlight-label">Matches in context</span>
   </div>
   <pre class="tool-out tool-out--wrap" id="highlight" aria-labelledby="highlight-label"></pre>
 </div>
 
-<div class="tool-pane tool-gap">
+{% comment %}
+  Replace and split both produce text rather than a list of hits, so they get a
+  box that can be copied out whole.
+{% endcomment %}
+<div class="tool-pane tool-gap" id="result-pane" hidden>
+  <div class="tool-pane-head">
+    <span class="tool-label monospace" id="result-label">Result</span>
+    <span class="tool-row">
+      <button type="button" class="tool-button--ghost monospace" id="copy">Copy</button>
+      <button type="button" class="tool-button--ghost monospace" id="apply">Use as input</button>
+    </span>
+  </div>
+  <textarea class="tool-area" id="result" readonly spellcheck="false" aria-labelledby="result-label"></textarea>
+</div>
+
+<div class="tool-pane tool-gap" id="matches-pane">
   <div class="tool-pane-head">
     <span class="tool-label monospace" id="matches-label">Match list</span>
   </div>
@@ -69,5 +116,10 @@ keywords: regex regexp regular expression match test pattern groups
     <dt>a{1,3}</dt><dd>between one and three</dd>
     <dt>a+? a{2,}?</dt><dd>match as few as possible</dd>
     <dt>ab|cd</dt><dd>match ab or cd</dd>
+  </dl>
+  <dl class="tool-kv tool-gap-s">
+    <dt>$&amp;</dt><dd>in a replacement: the whole match</dd>
+    <dt>$1 $&lt;name&gt;</dt><dd>in a replacement: a capture group</dd>
+    <dt>$$</dt><dd>in a replacement: a literal dollar sign</dd>
   </dl>
 </details>

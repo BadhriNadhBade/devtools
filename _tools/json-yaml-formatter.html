@@ -5,8 +5,8 @@ slug: json-yaml-formatter
 icon: align
 permalink: /json-yaml-formatter
 category: Formatting
-description: Check that a document is valid, say exactly where it is not, and lay it out again — indented, minified, or with its keys in order.
-keywords: json yaml yml format formatter lint linter validate validator pretty print beautify minify indent sort keys
+description: Check that a document is valid, say exactly where it is not, lay it out again, walk it as a tree, and pull single values out of it by path.
+keywords: json yaml yml format formatter lint linter validate validator pretty print beautify minify indent sort keys tree jsonpath query path
 ---
 
 <div class="tool-controls">
@@ -44,15 +44,31 @@ keywords: json yaml yml format formatter lint linter validate validator pretty p
   </label>
 
   <button type="button" class="tool-button--ghost monospace" id="sample">Sample</button>
+  <button type="button" class="tool-button--ghost monospace" id="open">Open file</button>
 </div>
 
-<div class="tool-panes">
-  <div class="tool-pane">
+{% comment %}
+  Pulling one value out of a large document is the other thing people open a
+  formatter to do, and scrolling is a poor way to do it.
+{% endcomment %}
+<div class="tool-field tool-gap-s">
+  <label class="tool-label monospace" for="query">Path</label>
+  <input type="text" class="tool-text tool-text--mono" id="query" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="$.meta.stars — or $..name, $.tags[*], $.tags[0:2]">
+</div>
+
+<div class="tool-panes tool-gap">
+  <div class="tool-pane" id="input-pane">
     <div class="tool-pane-head">
       <span class="tool-label monospace" id="input-label">JSON</span>
-      <span class="tool-label monospace" id="input-size"></span>
+      <span class="tool-row">
+        <span class="tool-label monospace" id="input-size"></span>
+        <button type="button" class="tool-button--ghost monospace" id="goto" hidden>Go to the error</button>
+        <button type="button" class="tool-button--ghost monospace" id="paste">Paste</button>
+        <button type="button" class="tool-button--ghost monospace" id="clear">Clear</button>
+      </span>
     </div>
-    <textarea class="tool-area" id="input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="input-label"></textarea>
+    <textarea class="tool-area" id="input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="input-label" aria-describedby="drop-hint"></textarea>
+    <p class="tool-hint smol" id="drop-hint">Drop a .json or .yaml file here.</p>
   </div>
 
   <div class="tool-pane">
@@ -69,6 +85,24 @@ keywords: json yaml yml format formatter lint linter validate validator pretty p
 </div>
 
 {% comment %}
+  The document as a shape rather than as text. Each row is a <details>, so
+  collapsing is the browser's own behaviour and the keyboard reaches it without
+  any help from here.
+{% endcomment %}
+<div class="tool-pane tool-gap" id="tree-pane" hidden>
+  <div class="tool-pane-head">
+    <span class="tool-label monospace" id="tree-label">Tree</span>
+    <span class="tool-row">
+      <span class="tool-label monospace" id="shape"></span>
+      <button type="button" class="tool-button--ghost monospace" id="expand-all">Expand all</button>
+      <button type="button" class="tool-button--ghost monospace" id="collapse-all">Collapse all</button>
+    </span>
+  </div>
+  <div class="tool-tree" id="tree" aria-labelledby="tree-label"></div>
+  <p class="tool-hint smol">Click a key to put its path in the box above.</p>
+</div>
+
+{% comment %}
   Everything here is valid input — a document that fails outright is reported on
   the status line instead. These are the things that parse and still want
   saying: a duplicate key, a number too large to survive a round trip, comments
@@ -82,5 +116,5 @@ keywords: json yaml yml format formatter lint linter validate validator pretty p
 </div>
 
 <p class="tool-note">
-  JSON is reformatted by changing whitespace and nothing else, so a number too long for a <code>double</code> and keys that a parser would reorder both come out exactly as they went in. YAML has to be rebuilt from its structure, which loses comments and blank lines — you will be told when there are any to lose.
+  JSON is reformatted by changing whitespace and nothing else, so a number too long for a <code>double</code> and keys that a parser would reorder both come out exactly as they went in. YAML has to be rebuilt from its structure, which loses comments and blank lines — you will be told when there are any to lose. The tree and the path box both read the document through a parser, so a number too large for a <code>double</code> is rounded <em>there</em> even though the formatted output beside it is not.
 </p>

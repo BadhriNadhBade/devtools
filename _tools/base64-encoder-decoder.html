@@ -5,8 +5,8 @@ slug: base64-encoder-decoder
 icon: network
 permalink: /base64-encoder-decoder
 category: Encoding
-description: Encode text to Base64 or decode it back. Handles UTF-8 correctly and speaks the URL-safe alphabet.
-keywords: base64 b64 encode decode btoa atob url-safe
+description: Encode text or a whole file to Base64 and decode it back, as text, as a data URI, or as the file it came from.
+keywords: base64 b64 encode decode btoa atob url-safe data uri file image binary
 ---
 
 <div class="tool-controls">
@@ -21,22 +21,78 @@ keywords: base64 b64 encode decode btoa atob url-safe
     <input type="checkbox" id="urlsafe">
     URL-safe
   </label>
+
+  <label class="tool-check">
+    <input type="checkbox" id="wrap">
+    Wrap at 76
+  </label>
+
+  <label class="tool-check">
+    <input type="checkbox" id="datauri">
+    Data URI
+  </label>
+
+  <button type="button" class="tool-button--ghost monospace" id="open">Open file</button>
 </div>
 
+{% comment %}
+  Shown only when the input is Base64 and the mode says otherwise, or the
+  reverse. Switching modes by hand is one click; being told which click is the
+  point of it.
+{% endcomment %}
+<p class="tool-hint" id="detect" hidden>
+  <span id="detect-text"></span>
+  <button type="button" class="tool-button--ghost monospace" id="detect-switch">Switch</button>
+</p>
+
 <div class="tool-panes">
-  <div class="tool-pane">
+  <div class="tool-pane" id="input-pane">
     <div class="tool-pane-head">
       <span class="tool-label monospace" id="input-label">Plain text</span>
-      <button type="button" class="tool-button--ghost monospace" id="sample">Sample</button>
+      <span class="tool-row">
+        <button type="button" class="tool-button--ghost monospace" id="paste">Paste</button>
+        <button type="button" class="tool-button--ghost monospace" id="clear">Clear</button>
+        <button type="button" class="tool-button--ghost monospace" id="sample">Sample</button>
+      </span>
     </div>
-    <textarea class="tool-area" id="input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="input-label"></textarea>
+
+    {% comment %}
+      A file has no text to show, so the box it would have gone in steps aside
+      for a chip naming what was loaded. Dismissing the chip brings the box
+      back with whatever was in it.
+    {% endcomment %}
+    <p class="tool-file" id="source" hidden>
+      <span class="monospace" id="source-name"></span>
+      <button type="button" class="tool-button--ghost monospace" id="source-clear" aria-label="Remove the loaded file">Remove</button>
+    </p>
+
+    <textarea class="tool-area" id="input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="input-label" aria-describedby="drop-hint"></textarea>
+    <p class="tool-hint smol" id="drop-hint">Drop a file here to encode it.</p>
   </div>
 
   <div class="tool-pane">
     <div class="tool-pane-head">
       <span class="tool-label monospace" id="output-label">Base64</span>
-      <button type="button" class="tool-button--ghost monospace" id="copy">Copy</button>
+      <span class="tool-row">
+        <span class="tool-label monospace" id="output-size"></span>
+        <button type="button" class="tool-button--ghost monospace" id="copy">Copy</button>
+        <button type="button" class="tool-button--ghost monospace" id="save">Save</button>
+      </span>
     </div>
     <textarea class="tool-area" id="output" readonly spellcheck="false" aria-labelledby="output-label"></textarea>
+
+    {% comment %}
+      Decoding an encoded image is common enough — a favicon out of a stylesheet,
+      an attachment out of an email — that showing the picture is more use than
+      describing the bytes.
+    {% endcomment %}
+    <figure class="tool-preview" id="preview" hidden>
+      <img id="preview-image" alt="The decoded image">
+      <figcaption class="smol monospace" id="preview-caption"></figcaption>
+    </figure>
   </div>
 </div>
+
+<p class="tool-note">
+  Text is encoded as UTF-8. A file is encoded byte for byte, so what comes back out of <em>Save</em> is the file you put in — decoding does not have to produce text at all.
+</p>
