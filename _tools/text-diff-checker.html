@@ -5,10 +5,10 @@ slug: text-diff-checker
 icon: copy
 permalink: /text-diff-checker
 category: Text
-description: Compare two blocks of text line by line or word by word and see exactly what changed.
+description: Compare two blocks of text line by line or word by word, hide the parts that did not change, and take the result away as a patch.
 # "text" stays in the keywords so the old name still finds this from the
 # filter, even though the title no longer repeats the category heading.
-keywords: diff compare text difference changes merge
+keywords: diff compare text difference changes merge patch unified context collapse
 ---
 
 <div class="tool-controls">
@@ -26,6 +26,20 @@ keywords: diff compare text difference changes merge
     <label for="view-unified">Unified</label>
   </div>
 
+  {% comment %}
+    How much of the unchanged text to keep around each change. The same number
+    is used for the patch, which is what `diff -U` means by context.
+  {% endcomment %}
+  <label class="tool-check" id="context-field">
+    Context
+    <select class="tool-select" id="context">
+      <option value="0">everything</option>
+      <option value="3" selected>3 lines</option>
+      <option value="5">5 lines</option>
+      <option value="10">10 lines</option>
+    </select>
+  </label>
+
   <label class="tool-check">
     <input type="checkbox" id="ignore-case">
     Ignore case
@@ -38,28 +52,39 @@ keywords: diff compare text difference changes merge
 
   <button type="button" class="tool-button--ghost monospace" id="sample">Sample</button>
   <button type="button" class="tool-button--ghost monospace" id="swap">Swap sides</button>
+  <button type="button" class="tool-button--ghost monospace" id="clear">Clear</button>
 </div>
 
 <div class="tool-panes">
-  <div class="tool-pane">
+  <div class="tool-pane" id="original-pane">
     <div class="tool-pane-head">
       <span class="tool-label monospace" id="original-label">Original</span>
     </div>
-    <textarea class="tool-area" id="original" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="original-label"></textarea>
+    <textarea class="tool-area" id="original" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="original-label" aria-describedby="drop-hint"></textarea>
   </div>
 
-  <div class="tool-pane">
+  <div class="tool-pane" id="changed-pane">
     <div class="tool-pane-head">
       <span class="tool-label monospace" id="changed-label">Changed</span>
     </div>
-    <textarea class="tool-area" id="changed" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="changed-label"></textarea>
+    <textarea class="tool-area" id="changed" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="changed-label" aria-describedby="drop-hint"></textarea>
   </div>
 </div>
+
+<p class="tool-hint smol" id="drop-hint">Drop a file on either box to load it.</p>
 
 <div class="tool-pane tool-gap">
   <div class="tool-pane-head">
     <span class="tool-label monospace" id="diff-label">Difference</span>
-    <span class="tool-label monospace" id="summary"></span>
+    <span class="tool-row">
+      <span class="tool-label monospace" id="summary"></span>
+      <button type="button" class="tool-button--ghost monospace" id="copy">Copy patch</button>
+      <button type="button" class="tool-button--ghost monospace" id="patch">Download .patch</button>
+    </span>
   </div>
   <pre class="tool-out tool-diff" id="diff" aria-labelledby="diff-label"></pre>
 </div>
+
+<p class="tool-note">
+  The patch is a unified diff — the format <code>diff -u</code> prints and <code>git apply</code> reads — so a comparison made here can be carried somewhere else and applied. Word-by-word comparison has no patch to produce: a patch is made of whole lines.
+</p>

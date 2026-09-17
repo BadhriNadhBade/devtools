@@ -5,8 +5,8 @@ slug: uuid-generator
 icon: key
 permalink: /uuid-generator
 category: Encoding
-description: Generate random v4 or time-ordered v7 UUIDs in bulk, from your browser's cryptographic random source.
-keywords: uuid guid v4 v7 random identifier generate
+description: Generate random v4, time-ordered v7, name-based v5 UUIDs or ULIDs in bulk — and read back what any identifier you already have is made of.
+keywords: uuid guid v4 v5 v7 ulid random identifier generate namespace inspect decode timestamp
 ---
 
 <div class="tool-controls">
@@ -15,6 +15,10 @@ keywords: uuid guid v4 v7 random identifier generate
     <label for="version-4">v4</label>
     <input type="radio" name="version" id="version-7" value="7">
     <label for="version-7">v7</label>
+    <input type="radio" name="version" id="version-5" value="5">
+    <label for="version-5">v5</label>
+    <input type="radio" name="version" id="version-ulid" value="ulid">
+    <label for="version-ulid">ULID</label>
     <input type="radio" name="version" id="version-nil" value="nil">
     <label for="version-nil">Nil</label>
   </div>
@@ -42,6 +46,33 @@ keywords: uuid guid v4 v7 random identifier generate
   <button type="button" class="tool-button monospace" id="generate">Generate</button>
 </div>
 
+{% comment %}
+  v5 is the one version that takes input: the same namespace and name always
+  produce the same UUID, which is the entire reason to choose it.
+{% endcomment %}
+<div class="tool-subcontrols" id="name-fields" hidden>
+  <label class="tool-check">
+    Namespace
+    <select class="tool-select" id="namespace">
+      <option value="6ba7b810-9dad-11d1-80b4-00c04fd430c8" selected>DNS</option>
+      <option value="6ba7b811-9dad-11d1-80b4-00c04fd430c8">URL</option>
+      <option value="6ba7b812-9dad-11d1-80b4-00c04fd430c8">OID</option>
+      <option value="6ba7b814-9dad-11d1-80b4-00c04fd430c8">X.500</option>
+      <option value="custom">Custom</option>
+    </select>
+  </label>
+
+  <label class="tool-check">
+    Custom namespace
+    <input type="text" class="tool-text tool-text--mono tool-text--inline" id="custom-namespace" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="a UUID" hidden>
+  </label>
+
+  <label class="tool-check">
+    Name
+    <input type="text" class="tool-text tool-text--mono tool-text--inline" id="name" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="devtools.badhrinadh.com">
+  </label>
+</div>
+
 <p class="desc" id="version-hint"></p>
 
 <div class="tool-pane">
@@ -54,3 +85,21 @@ keywords: uuid guid v4 v7 random identifier generate
   </div>
   <textarea class="tool-area" id="output" readonly spellcheck="false" aria-labelledby="output-label"></textarea>
 </div>
+
+{% comment %}
+  The other direction. An identifier out of a log line carries its version, its
+  variant and — for half the versions in use — the time it was made, none of
+  which is legible by eye.
+{% endcomment %}
+<div class="tool-pane tool-gap-l">
+  <div class="tool-pane-head">
+    <span class="tool-label monospace" id="inspect-label">Inspect</span>
+    <button type="button" class="tool-button--ghost monospace" id="inspect-output">Read the first one above</button>
+  </div>
+  <input type="text" class="tool-text tool-text--mono" id="inspect" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="paste a UUID or ULID" aria-labelledby="inspect-label">
+  <dl class="tool-kv tool-gap-s" id="inspection" hidden></dl>
+</div>
+
+<p class="tool-note">
+  v4 and v7 are drawn from <code>crypto.getRandomValues</code>. v5 is a SHA-1 of the namespace and name, so it is reproducible rather than random — the same two inputs give the same UUID on any machine. v1 is deliberately not offered: it embeds the generating machine's MAC address, and v7 sorts by time without that.
+</p>

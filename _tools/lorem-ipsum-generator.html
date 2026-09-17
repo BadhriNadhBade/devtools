@@ -5,8 +5,8 @@ slug: lorem-ipsum-generator
 icon: book
 permalink: /lorem-ipsum-generator
 category: Text
-description: Placeholder text by the paragraph, sentence or word, for when a layout needs filling.
-keywords: lorem ipsum placeholder dummy text filler generate
+description: Placeholder text by the paragraph, sentence or word — as plain text, as HTML, or as Markdown, in Latin or in the vocabulary the real copy will use.
+keywords: lorem ipsum placeholder dummy text filler generate html markdown paragraphs
 ---
 
 <div class="tool-controls">
@@ -24,18 +24,55 @@ keywords: lorem ipsum placeholder dummy text filler generate
     <label for="units-words">Words</label>
   </div>
 
+  <button type="button" class="tool-button monospace" id="generate">Generate</button>
+</div>
+
+<div class="tool-controls">
+  <div class="tool-seg" role="radiogroup" aria-label="Format">
+    <input type="radio" name="format" id="format-text" value="text" checked>
+    <label for="format-text">Text</label>
+    <input type="radio" name="format" id="format-html" value="html">
+    <label for="format-html">HTML</label>
+    <input type="radio" name="format" id="format-markdown" value="markdown">
+    <label for="format-markdown">Markdown</label>
+  </div>
+
   <label class="tool-check">
-    <input type="checkbox" id="start-with-lorem" checked>
-    Start with “Lorem ipsum”
+    Vocabulary
+    <select class="tool-select" id="flavour">
+      <option value="lorem" selected>Lorem ipsum</option>
+      <option value="corporate">Corporate</option>
+      <option value="tech">Technical</option>
+    </select>
   </label>
 
-  <button type="button" class="tool-button monospace" id="generate">Generate</button>
+  <label class="tool-check">
+    <input type="checkbox" id="start-with-lorem" checked>
+    Start with the stock opening
+  </label>
+
+  {% comment %}
+    Only meaningful once the output has markup to carry them, so it appears
+    with the formats that do.
+  {% endcomment %}
+  <label class="tool-check" id="rich-field" hidden>
+    <input type="checkbox" id="rich" checked>
+    Headings and lists
+  </label>
 </div>
 
 <div class="tool-pane">
   <div class="tool-pane-head">
     <span class="tool-label monospace" id="output-label">Output</span>
-    <button type="button" class="tool-button--ghost monospace" id="copy">Copy</button>
+    <span class="tool-row">
+      <span class="tool-label monospace" id="size"></span>
+      <button type="button" class="tool-button--ghost monospace" id="copy">Copy</button>
+      <button type="button" class="tool-button--ghost monospace" id="download">Download</button>
+    </span>
   </div>
   <textarea class="tool-area" id="output" readonly spellcheck="false" aria-labelledby="output-label"></textarea>
 </div>
+
+<p class="tool-note">
+  The two non-Latin vocabularies are there for the case Latin is bad at: judging whether real copy will fit, and whether it will read as anything once it does.
+</p>

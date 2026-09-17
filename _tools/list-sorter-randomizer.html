@@ -5,8 +5,8 @@ slug: list-sorter-randomizer
 icon: list
 permalink: /list-sorter-randomizer
 category: Text
-description: Sort a list of lines alphabetically or by length, reverse it, shuffle it, or strip the duplicates out.
-keywords: sort list lines alphabetical shuffle randomize deduplicate unique reverse
+description: Sort, shuffle, deduplicate and filter a list of lines, compare it against a second list, and wrap the result into whatever a query or a config file wants.
+keywords: sort list lines alphabetical shuffle randomize deduplicate unique reverse filter column set difference intersection join prefix suffix
 ---
 
 <div class="tool-controls">
@@ -15,12 +15,16 @@ keywords: sort list lines alphabetical shuffle randomize deduplicate unique reve
     <label for="order-ascending">A–Z</label>
     <input type="radio" name="order" id="order-descending" value="descending">
     <label for="order-descending">Z–A</label>
+    <input type="radio" name="order" id="order-numeric" value="numeric">
+    <label for="order-numeric">Numeric</label>
     <input type="radio" name="order" id="order-length" value="length">
     <label for="order-length">Length</label>
     <input type="radio" name="order" id="order-reversed" value="reversed">
     <label for="order-reversed">Reverse</label>
     <input type="radio" name="order" id="order-random" value="random">
     <label for="order-random">Shuffle</label>
+    <input type="radio" name="order" id="order-none" value="none">
+    <label for="order-none">As-is</label>
   </div>
 
   <button type="button" class="tool-button--ghost monospace" id="sample">Sample</button>
@@ -34,13 +38,92 @@ keywords: sort list lines alphabetical shuffle randomize deduplicate unique reve
   <label class="tool-check"><input type="checkbox" id="natural" checked> Natural number order</label>
 </div>
 
+{% comment %}
+  Sorting on a field rather than the whole line. The delimiter and the field
+  number only matter together, so they appear together.
+{% endcomment %}
+<div class="tool-subcontrols">
+  <label class="tool-check">
+    Sort on
+    <select class="tool-select" id="field">
+      <option value="line" selected>the whole line</option>
+      <option value="column">one column</option>
+    </select>
+  </label>
+
+  <label class="tool-check" id="delimiter-field" hidden>
+    Split by
+    <select class="tool-select" id="delimiter">
+      <option value="," selected>comma</option>
+      <option value="\t">tab</option>
+      <option value=" ">space</option>
+      <option value="|">pipe</option>
+      <option value=";">semicolon</option>
+    </select>
+  </label>
+
+  <label class="tool-check" id="column-field" hidden>
+    Column
+    <input type="number" class="tool-text tool-number" id="column" value="1" min="1" max="99" step="1">
+  </label>
+
+  <label class="tool-check">
+    Keep lines matching
+    <input type="text" class="tool-text tool-text--mono tool-text--inline" id="filter" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="text, or /a regex/">
+  </label>
+
+  <label class="tool-check"><input type="checkbox" id="invert"> Drop them instead</label>
+</div>
+
+{% comment %}
+  Comparing one list against another is the other half of what people bring a
+  list to a page like this for, and it is not something a sort can do.
+{% endcomment %}
+<div class="tool-subcontrols">
+  <label class="tool-check">
+    Against a second list
+    <select class="tool-select" id="compare">
+      <option value="none" selected>don't compare</option>
+      <option value="union">everything in either</option>
+      <option value="both">only what is in both</option>
+      <option value="first">only what is missing from the second</option>
+      <option value="second">only what the second list adds</option>
+    </select>
+  </label>
+</div>
+
+{% comment %}
+  What to do with the result once it is the right set in the right order:
+  wrapping each line and joining them is how a list becomes a query.
+{% endcomment %}
+<div class="tool-subcontrols">
+  <label class="tool-check">
+    Prefix
+    <input type="text" class="tool-text tool-text--mono tool-text--inline" id="prefix" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="before each line">
+  </label>
+  <label class="tool-check">
+    Suffix
+    <input type="text" class="tool-text tool-text--mono tool-text--inline" id="suffix" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="after each line">
+  </label>
+  <label class="tool-check">
+    Join with
+    <input type="text" class="tool-text tool-text--mono tool-text--inline" id="join" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="one line each">
+  </label>
+  <label class="tool-check"><input type="checkbox" id="number"> Number the lines</label>
+</div>
+
 <div class="tool-panes">
-  <div class="tool-pane">
+  <div class="tool-pane" id="input-pane">
     <div class="tool-pane-head">
       <span class="tool-label monospace" id="input-label">Input</span>
-      <span class="tool-label monospace" id="input-count"></span>
+      <span class="tool-row">
+        <span class="tool-label monospace" id="input-count"></span>
+        <button type="button" class="tool-button--ghost monospace" id="paste">Paste</button>
+        <button type="button" class="tool-button--ghost monospace" id="clear">Clear</button>
+      </span>
     </div>
-    <textarea class="tool-area" id="input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="input-label"></textarea>
+    <textarea class="tool-area" id="input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="input-label" aria-describedby="drop-hint"></textarea>
+    <p class="tool-hint smol" id="drop-hint">Drop a text file here to load it.</p>
   </div>
 
   <div class="tool-pane">
@@ -49,8 +132,17 @@ keywords: sort list lines alphabetical shuffle randomize deduplicate unique reve
       <span class="tool-row">
         <span class="tool-label monospace" id="output-count"></span>
         <button type="button" class="tool-button--ghost monospace" id="copy">Copy</button>
+        <button type="button" class="tool-button--ghost monospace" id="download">Download</button>
       </span>
     </div>
     <textarea class="tool-area" id="output" readonly spellcheck="false" aria-labelledby="output-label"></textarea>
   </div>
+</div>
+
+<div class="tool-pane tool-gap" id="second-pane" hidden>
+  <div class="tool-pane-head">
+    <span class="tool-label monospace" id="second-label">Second list</span>
+    <span class="tool-label monospace" id="second-count"></span>
+  </div>
+  <textarea class="tool-area tool-area--short" id="second" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="second-label"></textarea>
 </div>

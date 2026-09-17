@@ -5,14 +5,26 @@ slug: random-string-generator
 icon: dice
 permalink: /random-string-generator
 category: Text
-description: Random strings and passphrase-length secrets, drawn from your browser's cryptographic random source.
-keywords: random string password generate secret token nonce
+description: Random strings and passphrases from your browser's cryptographic random source, with the entropy and the time it would take to guess spelled out.
+keywords: random string password generate secret token nonce passphrase diceware entropy pin hex api key
 ---
 
 <div class="tool-controls">
-  <label class="tool-check">
+  <div class="tool-seg" role="radiogroup" aria-label="Kind">
+    <input type="radio" name="kind" id="kind-string" value="string" checked>
+    <label for="kind-string">Characters</label>
+    <input type="radio" name="kind" id="kind-passphrase" value="passphrase">
+    <label for="kind-passphrase">Words</label>
+  </div>
+
+  <label class="tool-check" id="length-field">
     Length
     <input type="number" class="tool-text tool-number" id="length" value="24" min="1" max="4096" step="1">
+  </label>
+
+  <label class="tool-check" id="words-field" hidden>
+    Words
+    <input type="number" class="tool-text tool-number" id="words" value="6" min="2" max="64" step="1">
   </label>
 
   <label class="tool-check">
@@ -23,25 +35,70 @@ keywords: random string password generate secret token nonce
   <button type="button" class="tool-button monospace" id="generate">Generate</button>
 </div>
 
-<div class="tool-controls">
+<div class="tool-controls" id="string-controls">
   <label class="tool-check"><input type="checkbox" class="charset" value="uppercase" checked> A–Z</label>
   <label class="tool-check"><input type="checkbox" class="charset" value="lowercase" checked> a–z</label>
   <label class="tool-check"><input type="checkbox" class="charset" value="digits" checked> 0–9</label>
   <label class="tool-check"><input type="checkbox" class="charset" value="symbols"> Symbols</label>
   <label class="tool-check"><input type="checkbox" id="unambiguous"> Skip lookalikes</label>
+  <label class="tool-check"><input type="checkbox" id="every-set"> One of each set</label>
 </div>
 
-<div class="tool-pane">
+<div class="tool-subcontrols" id="alphabet-controls">
+  <label class="tool-check">
+    Also allow
+    <input type="text" class="tool-text tool-text--mono tool-text--inline" id="extra" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="any other characters">
+  </label>
+  <label class="tool-check">
+    Never use
+    <input type="text" class="tool-text tool-text--mono tool-text--inline" id="exclude" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="characters to keep out">
+  </label>
+</div>
+
+<div class="tool-subcontrols" id="passphrase-controls" hidden>
+  <label class="tool-check">
+    Separator
+    <select class="tool-select" id="separator">
+      <option value="-" selected>hyphen</option>
+      <option value=".">dot</option>
+      <option value="_">underscore</option>
+      <option value=" ">space</option>
+      <option value="">nothing</option>
+    </select>
+  </label>
+  <label class="tool-check"><input type="checkbox" id="capitalize"> Capitalise each word</label>
+  <label class="tool-check"><input type="checkbox" id="add-number"> End with a digit</label>
+</div>
+
+{% comment %}
+  The shapes people actually ask for, so the common cases are one click rather
+  than four. Each one sets every control it depends on, so what a preset does
+  is visible afterwards rather than hidden inside it.
+{% endcomment %}
+<div class="tool-presets" id="presets">
+  <span class="tool-label monospace">Presets</span>
+  <button type="button" class="tool-button--ghost monospace" data-preset="password">Password</button>
+  <button type="button" class="tool-button--ghost monospace" data-preset="passphrase">Passphrase</button>
+  <button type="button" class="tool-button--ghost monospace" data-preset="pin">PIN</button>
+  <button type="button" class="tool-button--ghost monospace" data-preset="hex">Hex token</button>
+  <button type="button" class="tool-button--ghost monospace" data-preset="base58">Base58</button>
+  <button type="button" class="tool-button--ghost monospace" data-preset="api">API key</button>
+  <button type="button" class="tool-button--ghost monospace" data-preset="wifi">Wi-Fi key</button>
+</div>
+
+<div class="tool-pane tool-gap">
   <div class="tool-pane-head">
     <span class="tool-label monospace" id="output-label">Output</span>
     <span class="tool-row">
       <span class="tool-label monospace" id="entropy"></span>
       <button type="button" class="tool-button--ghost monospace" id="copy">Copy</button>
+      <button type="button" class="tool-button--ghost monospace" id="download">Download</button>
     </span>
   </div>
   <textarea class="tool-area" id="output" readonly spellcheck="false" aria-labelledby="output-label"></textarea>
+  <p class="tool-hint smol" id="strength"></p>
 </div>
 
 <p class="tool-note">
-  Generated with <code>crypto.getRandomValues</code> and rejection sampling, so every character in the alphabet is equally likely — no modulo bias.
+  Generated with <code>crypto.getRandomValues</code> and rejection sampling, so every character and every word in the alphabet is equally likely — no modulo bias. The guessing time assumes an offline attack at ten billion guesses a second against a fast hash; against a slow one like Argon2 it is far longer, and against a leaked plaintext database it is nothing at all. Nothing generated here is stored, remembered or sent anywhere.
 </p>

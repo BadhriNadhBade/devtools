@@ -165,3 +165,81 @@ export function alignRows(parts) {
 
   return rows
 }
+
+/**
+ * The same diff as a unified patch — the format `diff -u` prints and `git
+ * apply` reads, so a comparison made here can be applied somewhere else.
+ *
+ * Only whole lines can be expressed this way, so the caller passes a
+ * line-granularity diff; a word diff has no patch to produce.
+ *
+ * @param {{type: 'same'|'add'|'del', text: string}[]} parts
+ * @param {{context?: number, from?: string, to?: string}} options
+ */
+export function toUnifiedPatch(parts, { context = 3, from = 'original', to = 'changed' } = {}) {
+  // Where each part sits in each file, walked once up front so a hunk header
+  // can be written without counting backwards.
+  const placed = []
+  let leftNo = 0
+  let rightNo = 0
+
+  for (const part of parts) {
+    placed.push({
+      ...part,
+      leftNo: part.type === 'add' ? leftNo : ++leftNo,
+      rightNo: part.type === 'del' ? rightNo : ++rightNo
+    })
+  }
+
+  // A hunk covers every change plus `context` unchanged lines either side;
+  // changes closer together than twice that are one hunk rather than two.
+  const changed = placed.map(part => part.type !== 'same')
+  const hunks = []
+
+  for (let i = 0; i < placed.length; i++) {
+    if (!changed[i]) continue
+
+    const start = Math.max(0, i - context)
+    let end = i
+
+    while (end + 1 < placed.length) {
+      const next = changed.indexOf(true, end + 1)
+      if (next === -1 || next - end > context * 2) break
+      end = next
+    }
+
+    end = Math.min(placed.length - 1, end + context)
+
+    const last = hunks[hunks.length - 1]
+    if (last && start <= last.end + 1) last.end = Math.max(last.end, end)
+    else hunks.push({ start, end })
+
+    i = end
+  }
+
+  if (!hunks.length) return ''
+
+  const lines = [`--- a/${from}`, `+++ b/${to}`]
+
+  for (const hunk of hunks) {
+    const slice = placed.slice(hunk.start, hunk.end + 1)
+
+    const leftCount = slice.filter(part => part.type !== 'add').length
+    const rightCount = slice.filter(part => part.type !== 'del').length
+
+    // An empty side is numbered from the line before it, which is what every
+    // other implementation prints for a pure insertion or deletion.
+    const leftStart = leftCount ? slice.find(part => part.type !== 'add').leftNo : slice[0].leftNo
+    const rightStart = rightCount ? slice.find(part => part.type !== 'del').rightNo : slice[0].rightNo
+
+    lines.push(`@@ -${leftStart},${leftCount} +${rightStart},${rightCount} @@`)
+
+    for (const part of slice) {
+      lines.push(`${part.type === 'add' ? '+' : part.type === 'del' ? '-' : ' '}${part.text}`)
+    }
+  }
+
+  // A patch ends with a newline; without one `git apply` calls the last line
+  // incomplete and says so.
+  return `${lines.join('\n')}\n`
+}

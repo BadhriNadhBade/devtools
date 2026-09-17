@@ -27,6 +27,28 @@ The `tool` layout loads `/assets/js/tools/{{ page.slug }}.js` automatically, and
 the index page is generated from the `_tools` collection, so a new file appears
 in the list and in the search filter on its own.
 
+`assets/js/lib/ui.js` is where most of a tool's plumbing already lives. Reach
+for it before writing any of this again:
+
+| | |
+|---|---|
+| `$` `$$` | element lookup |
+| `live` `segment` | re-run on input; read a segmented control |
+| `status` `clearStatus` | the one status line the layout renders |
+| `copyButton` `pasteButton` `clearButton` `download` | the pane-head buttons |
+| `dropZone` `filePicker` `readFileText` `readFileBytes` | files in, by drop, picker or paste |
+| `remember` `readStore` `writeStore` | throw-safe `localStorage` |
+| `shortcuts` | Ctrl/Cmd+Enter to run, Escape to clear |
+| `bytes` `encoder` `decoder` | formatting and text codecs |
+
+The rest of `lib/` is one module per problem: `md5`, `crc32`, `diff`, `json`,
+`yaml`, `formats` (TOML, XML, CSV, `.env`, query strings), `jsonpath`, `lorem`,
+`wordlist`, `regex-match` and the worker that runs it off the main thread.
+
+Nothing is remembered unless the tool asks. `remember` is opt-in per page, and
+the two pages that handle secrets — the JWT decoder and the random string
+generator — deliberately do not call it.
+
 Front matter looks like this:
 
 ```yaml
@@ -58,7 +80,7 @@ _meta/                  robots.txt, humans.txt, sitemap.xml
 assets/css/new.scss     theme; the palette block is copied from the main site
 assets/img/             favicon
 assets/js/index.js      the index page's filter
-assets/js/lib/          shared modules (ui, md5, diff, lorem, yaml, json)
+assets/js/lib/          shared modules (see below)
 assets/js/tools/        one module per tool
 ```
 
