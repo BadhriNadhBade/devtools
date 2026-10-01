@@ -23,6 +23,22 @@ One tool came from somewhere else entirely. The **structured data converter** fo
 
 The **JSON / YAML formatter** is not a port of anything. The obvious way to reformat JSON is to parse it and print it again, and doing that silently damages documents: keys that look like integers come back reordered, whole numbers past 2<sup>53</sup> come back rounded, and a duplicate key disappears without a word. So the [reader here](https://github.com/BadhriNadhBade/devtools/blob/main/assets/js/lib/json.js) keeps every scalar as the characters you wrote and only ever changes the whitespace between them. It is strict about what it accepts — a trailing comma or a comment is a mistake worth naming rather than quietly tolerating — and it points at the line and column where it gave up.
 
+## Moving between tools
+
+Several of the tools answer a question that another one asks. A Base64 payload turns out to be JSON; a substitution produces a list that wants sorting; placeholder text exists to be measured against a limit. Where that chain is a real one, the output pane carries a **Send to** menu, and the tool you pick opens with the text already in it.
+
+What is being carried never goes into the address bar. It is held in `sessionStorage`, which belongs to this one tab, and it is read exactly once and deleted on arrival — so a reload shows the document you have been editing since, not the one you came in with. A query string would instead put whatever you were working on into your history, and into the logs of anything that sees a URL.
+
+For the same reason, links work in one direction only. A tool reads its state out of the query string if there is one, so `/regex-tester?pattern=\d%2B` opens with that pattern loaded and a link can carry a worked example to somebody else. No page here ever *writes* the address bar while you type.
+
+Two pages opt out of all of it. The **JWT decoder** holds a credential and the key to check it; the **random string generator** produces secrets. Neither remembers a field between visits, neither accepts one from a link, and neither offers to pass anything on.
+
+## Keyboard
+
+Every tool binds the same two keys: <kbd>Ctrl</kbd> or <kbd>Cmd</kbd> + <kbd>Enter</kbd> runs it, <kbd>Esc</kbd> clears it, and both work from inside whichever box you are typing in. On the index, <kbd>/</kbd> jumps to the filter.
+
+Replacing the contents of a box — loading a sample, dropping a file, swapping two sides — is an undoable edit, so <kbd>Ctrl</kbd>+<kbd>Z</kbd> brings back what was there before. Clicking *Sample* over something you had pasted is not meant to be the end of it.
+
 ## Type
 
 Body text is [IBM Plex Sans](https://fonts.google.com/specimen/IBM+Plex+Sans). Everything a tool reads or writes is set in whatever monospace your system provides.

@@ -1,7 +1,9 @@
 import {
   $, live, status, clearStatus, copyText, encoder, bytes,
-  dropZone, filePicker, readFileBytes, pasteButton, clearButton, clearField, shortcuts
+  dropZone, filePicker, readFileBytes, pasteButton, clearButton, clearField, setField,
+  receive, prefill, shortcuts
 } from '../lib/ui.js'
+import { digestAll, ALGORITHMS, KEYED } from '../lib/digest.js'
 import md5 from '../lib/md5.js'
 import crc32 from '../lib/crc32.js'
 
@@ -20,26 +22,67 @@ const dropHint = $('#drop-hint')
 
 const SAMPLE = 'The quick brown fox jumps over the lazy dog'
 
-// CRC32 and MD5 are ours; the rest come from Web Crypto. HMAC is only offered
-// for the algorithms Web Crypto will key — writing an HMAC-MD5 by hand to
-// round out a list would be offering a worse option for the sake of symmetry.
-const ALGORITHMS = ['CRC32', 'MD5', 'SHA-1', 'SHA-256', 'SHA-384', 'SHA-512']
-const KEYED = ['SHA-1', 'SHA-256', 'SHA-384', 'SHA-512']
+// The algorithms, the hex conversion and the HMAC import all live in
+// `lib/digest.js` now, because the worker below needs the same six.
 
-const toHex = buffer =>
-  [...new Uint8Array(buffer)].map(byte => byte.toString(16).padStart(2, '0')).join('')
+// ---------------------------------------------------------------------------
+// Where the hashing happens. `MAX_FILE` is 32 MB and MD5 and CRC32 are plain
+// JavaScript, so hashing a large file on this thread freezes the tab for as
+// long as it takes — including the status line that would have explained the
+// wait. Same move, and same fallback, as the regex tester's matching.
+// ---------------------------------------------------------------------------
 
-async function digest(algorithm, data) {
-  if (algorithm === 'CRC32') return crc32(data)
-  if (algorithm === 'MD5') return md5(data)
-  return toHex(await crypto.subtle.digest(algorithm, data))
+let worker
+let canUseWorker = typeof Worker === 'function'
+let ticket = 0
+
+// Requests in flight, by the number they were sent with, so a reply can find
+// the run that asked for it.
+const waiting = new Map()
+
+function ensureWorker() {
+  if (worker) return worker
+
+  worker = new Worker('/assets/js/lib/hash-worker.js', { type: 'module' })
+
+  worker.addEventListener('message', ({ data }) => {
+    const settle = waiting.get(data.id)
+    if (!settle) return
+    waiting.delete(data.id)
+
+    if (data.error) settle.reject(new Error(data.error))
+    else settle.resolve(data)
+  })
+
+  // The worker failing to start at all — a blocked module worker, say — is not
+  // something to retry, so hashing falls back to this thread from here on.
+  worker.addEventListener('error', () => {
+    worker.terminate()
+    worker = null
+    canUseWorker = false
+
+    for (const settle of waiting.values()) settle.reject(new Error('the worker would not start'))
+    waiting.clear()
+
+    // Bumps the generation, so the rejections above land on a run that is no
+    // longer the newest and are dropped rather than reported.
+    run()
+  })
+
+  return worker
 }
 
-async function keyedDigest(algorithm, data, secret) {
-  const material = await crypto.subtle.importKey(
-    'raw', encoder.encode(secret), { name: 'HMAC', hash: algorithm }, false, ['sign']
-  )
-  return toHex(await crypto.subtle.sign('HMAC', material, data))
+// Resolves to `{ algorithms, values }` either way, so the caller never has to
+// know which thread did the work.
+function compute(data, secret) {
+  if (!canUseWorker) return digestAll({ data, secret })
+
+  const id = ++ticket
+
+  return new Promise((resolve, reject) => {
+    waiting.set(id, { resolve, reject })
+    ensureWorker().postMessage({ id, data, secret })
+  })
 }
 
 // What is being hashed. A file is held as bytes; anything else comes out of
@@ -165,10 +208,13 @@ async function run() {
     return
   }
 
+  // Big enough to be worth saying something about, small enough that the usual
+  // paste never sees it. The worker is quick; the wait being unexplained is
+  // what made it feel otherwise.
+  if (data.length > 4 * 1024 * 1024) status(`Hashing ${bytes(data.length)}…`, 'info')
+
   try {
-    const values = await Promise.all(algorithms.map(algorithm =>
-      keyed ? keyedDigest(algorithm, data, key.value) : digest(algorithm, data)
-    ))
+    const { values } = await compute(data, keyed ? key.value : null)
     if (generation !== latest) return
 
     const hit = show(values, algorithms)
@@ -199,7 +245,7 @@ async function load(loaded) {
 
 $('#sample').addEventListener('click', () => {
   forgetFile()
-  input.value = SAMPLE
+  setField(input, SAMPLE)
   run()
 })
 
@@ -217,4 +263,14 @@ shortcuts({ run, clear: () => { clearField(input); clearField(expected); forgetF
 
 live([input, uppercase, hmac, key, expected], run)
 
+// Deliberately short of the key and the HMAC switch: this page remembers
+// nothing, and a shared secret is not something to accept from a link either.
+prefill([input, expected, uppercase])
+
 run()
+
+// Something sent over from another tool, most often a payload whose digest
+// somebody wants to check against a value they were given. After the first run
+// rather than before it, so the line saying where the text came from is the one
+// left on screen.
+receive(input, run)

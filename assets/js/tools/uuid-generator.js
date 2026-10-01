@@ -1,5 +1,6 @@
 import {
-  $, live, segment, copyButton, download, status, clearStatus, remember, clearField, shortcuts, encoder
+  $, live, segment, copyButton, download, status, clearStatus,
+  remember, prefill, clearField, setField, shortcuts, encoder
 } from '../lib/ui.js'
 
 const output = $('#output')
@@ -294,7 +295,7 @@ $('#download').addEventListener('click', () => {
 $('#inspect-output').addEventListener('click', () => {
   const first = output.value.split('\n')[0]
   if (!first) return
-  inspectInput.value = first
+  setField(inspectInput, first)
   describe()
 })
 
@@ -308,5 +309,14 @@ remember('devtools.uuid', [
   $('#version-4'), $('#version-7'), $('#version-5'), $('#version-ulid'), $('#version-nil')
 ])
 
+// After `remember`, so a link naming a version beats the one left selected last
+// time. The inspector takes one too: an identifier out of a log line is a
+// reasonable thing to send somebody a link to.
+prefill([
+  quantity, uppercase, noHyphens, braces, namespace, customNamespace, name, inspectInput,
+  $('#version-4'), $('#version-7'), $('#version-5'), $('#version-ulid'), $('#version-nil')
+])
+
 hint.textContent = HINTS[readVersion()]
 generate()
+if (inspectInput.value) describe()

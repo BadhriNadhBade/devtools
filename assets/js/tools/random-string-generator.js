@@ -1,4 +1,4 @@
-import { $, $$, live, segment, copyButton, download, status, shortcuts } from '../lib/ui.js'
+import { $, $$, live, segment, copyButton, download, status, setField, shortcuts } from '../lib/ui.js'
 import { WORDS, BITS_PER_WORD } from '../lib/wordlist.js'
 
 const output = $('#output')
@@ -236,8 +236,8 @@ function applyPreset(name) {
     for (const box of $$('.charset')) box.checked = preset.sets.includes(box.value)
   }
 
-  extra.value = preset.extra || ''
-  exclude.value = ''
+  setField(extra, preset.extra || '')
+  setField(exclude, '')
   unambiguous.checked = Boolean(preset.unambiguous)
   everySet.checked = Boolean(preset.everySet)
 
@@ -264,6 +264,10 @@ copyButton($('#copy'), () => output.value)
 shortcuts({ run: generate })
 
 // Nothing here is remembered on purpose: every field on this page is either a
-// secret or a description of one.
+// secret or a description of one. The same reasoning rules out the other three
+// ways state moves around this site — no `prefill`, because an alphabet and a
+// length arriving from a link invite a generated secret to be shared by the
+// same route, and no `sendTo` or `receive`, because what this page produces
+// should go to the thing that needs it and nowhere else.
 
 generate()

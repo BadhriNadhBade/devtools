@@ -1,6 +1,7 @@
 import {
   $, live, segment, status, clearStatus, copyButton, download, clearButton, clearField,
-  dropZone, readFileText, remember, shortcuts
+  setField, dropZone, filePicker, pasteButton, readFileText,
+  remember, prefill, receive, shortcuts
 } from '../lib/ui.js'
 import { diffTokens, splitLines, splitWords, countChanges, alignRows, toUnifiedPatch } from '../lib/diff.js'
 
@@ -318,15 +319,15 @@ const patch = () => last.byWord
   : toUnifiedPatch(last.parts, { context: Number(context.value) || 3 })
 
 $('#sample').addEventListener('click', () => {
-  original.value = SAMPLE_ORIGINAL
-  changed.value = SAMPLE_CHANGED
+  setField(original, SAMPLE_ORIGINAL)
+  setField(changed, SAMPLE_CHANGED)
   reset()
 })
 
 $('#swap').addEventListener('click', () => {
   const held = original.value
-  original.value = changed.value
-  changed.value = held
+  setField(original, changed.value)
+  setField(changed, held)
   reset()
 })
 
@@ -339,15 +340,22 @@ patchButton.addEventListener('click', () => {
   download('changes.patch', text, 'text/x-patch')
 })
 
-dropZone($('#original-pane'), async file => {
-  original.value = await readFileText(file)
-  reset()
-})
+// A side per pane, each with all three routes in. The buttons matter most on a
+// touch screen, where a drop is not something the device can do at all and the
+// two boxes were otherwise unreachable by file.
+function side(field, pane, open, paste) {
+  const load = async file => {
+    setField(field, await readFileText(file))
+    reset()
+  }
 
-dropZone($('#changed-pane'), async file => {
-  changed.value = await readFileText(file)
-  reset()
-})
+  dropZone($(pane), load)
+  filePicker($(open), load)
+  pasteButton($(paste), field, reset)
+}
+
+side(original, '#original-pane', '#open-original', '#paste-original')
+side(changed, '#changed-pane', '#open-changed', '#paste-changed')
 
 // Copying the diff means copying a patch — the rendered view carries colour
 // and line numbers that would paste as noise.
@@ -364,4 +372,16 @@ remember('devtools.diff', [
   $('#view-split'), $('#view-unified')
 ])
 
+// After `remember`, so a link naming a view beats the one left selected last
+// time.
+prefill([
+  original, changed, ignoreCase, ignoreWhitespace, context,
+  $('#granularity-lines'), $('#granularity-words'),
+  $('#view-split'), $('#view-unified')
+])
+
 run()
+
+// Whatever was sent over is the thing being compared against: it lands on the
+// left, leaving the right-hand box for what it is being compared to.
+receive(original, reset)

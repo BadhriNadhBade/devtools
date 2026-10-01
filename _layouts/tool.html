@@ -24,6 +24,14 @@ layout: default
 
 <p class="tool-note">
   Runs entirely in this tab. Nothing you paste is uploaded, logged, or sent anywhere.
+  <br>
+  {% comment %}
+    Every tool binds the same two keys through `shortcuts()` in lib/ui.js, and
+    nothing anywhere said so. One shared line rather than a hint per tool or a
+    help overlay — and `shortcuts()` puts the same two on the controls they
+    reach, as a title and an `aria-keyshortcuts`.
+  {% endcomment %}
+  <kbd>Ctrl</kbd> or <kbd>Cmd</kbd> + <kbd>Enter</kbd> runs, <kbd>Esc</kbd> clears.
 </p>
 
 <script type="module" src="/assets/js/tools/{{ page.slug }}.js"></script>

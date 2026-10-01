@@ -1,6 +1,7 @@
 import {
-  $, live, copyButton, pasteButton, clearButton, clearField, download, status, clearStatus,
-  dropZone, filePicker, readFileText, remember, shortcuts
+  $, live, copyButton, pasteButton, clearButton, clearField, setField, download,
+  status, clearStatus, dropZone, filePicker, readFileText,
+  remember, prefill, sendTo, receive, shortcuts
 } from '../lib/ui.js'
 import { parse as parseYaml, stringify as stringifyYaml } from '../lib/yaml.js'
 import {
@@ -131,7 +132,7 @@ function run() {
 $('#sample').addEventListener('click', () => {
   // Every source format has a sample; the ones that are output-only fall back
   // to JSON, which converts to all of them.
-  input.value = SAMPLES[from.value] || SAMPLES.json
+  setField(input, SAMPLES[from.value] || SAMPLES.json)
   run()
 })
 
@@ -151,7 +152,7 @@ $('#swap').addEventListener('click', () => {
 
   from.value = to.value
   to.value = held
-  if (converted) input.value = converted
+  if (converted) setField(input, converted)
 
   run()
 })
@@ -168,7 +169,7 @@ const BY_EXTENSION = {
 }
 
 async function load(file) {
-  input.value = await readFileText(file)
+  setField(input, await readFileText(file))
 
   const extension = file.name.split('.').pop().toLowerCase()
   const guessed = file.name.startsWith('.env') ? 'env' : BY_EXTENSION[extension]
@@ -186,6 +187,20 @@ pasteButton($('#paste'), input, run)
 clearButton($('#clear'), input, run)
 shortcuts({ run, clear: () => { clearField(input); run() } })
 
+// Where a converted document goes next: back to the formatter to be laid out
+// or checked, or into a comparison against the version it is replacing.
+sendTo($('#send'), [
+  'json-yaml-formatter',
+  'text-diff-checker',
+  'base64-encoder-decoder'
+], () => output.value, 'converter')
+
 remember('devtools.converter', [from, to, indent])
 
+// After `remember`, so a link naming the pair of formats beats the pair left
+// selected last time.
+prefill([input, from, to, indent])
+
 run()
+
+receive(input, run)

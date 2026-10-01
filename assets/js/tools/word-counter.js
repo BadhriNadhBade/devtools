@@ -1,6 +1,7 @@
 import {
   $, live, bytes, encoder, dropZone, filePicker, readFileText,
-  pasteButton, clearButton, clearField, remember, shortcuts, status
+  pasteButton, clearButton, clearField, setField,
+  remember, prefill, receive, shortcuts, status
 } from '../lib/ui.js'
 
 const input = $('#input')
@@ -280,7 +281,7 @@ function describeSelection() {
 }
 
 $('#sample').addEventListener('click', () => {
-  input.value = SAMPLE
+  setField(input, SAMPLE)
   run()
 })
 
@@ -288,17 +289,14 @@ input.addEventListener('select', describeSelection)
 input.addEventListener('keyup', describeSelection)
 input.addEventListener('mouseup', describeSelection)
 
-dropZone($('#input-pane'), async file => {
-  input.value = await readFileText(file)
+async function load(file) {
+  setField(input, await readFileText(file))
   status(`Loaded ${file.name}`, 'ok')
   run()
-})
+}
 
-filePicker($('#open'), async file => {
-  input.value = await readFileText(file)
-  status(`Loaded ${file.name}`, 'ok')
-  run()
-}, 'text/*,.md,.csv,.json,.log')
+dropZone($('#input-pane'), load)
+filePicker($('#open'), load, 'text/*,.md,.csv,.json,.log')
 
 pasteButton($('#paste'), input, run)
 clearButton($('#clear'), input, () => { selection.textContent = ''; run() })
@@ -308,4 +306,13 @@ live([input, skipStopwords, gram], run)
 
 remember('devtools.words', [skipStopwords, gram])
 
+// After `remember`, so a link naming a phrase length beats the one left
+// selected last time.
+prefill([input, skipStopwords, gram])
+
 run()
+
+// This page has no output to send on, but it is the end of several chains:
+// generated placeholder being measured against a limit, a filtered list being
+// counted, a substitution being checked for length.
+receive(input, run)

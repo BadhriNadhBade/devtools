@@ -1,6 +1,7 @@
 import {
-  $, $$, live, segment, status, clearStatus, copyButton, pasteButton, clearButton, clearField,
-  dropZone, readFileText, remember, shortcuts
+  $, $$, live, segment, status, clearStatus, copyButton, pasteButton, clearButton,
+  clearField, setField, dropZone, filePicker, readFileText,
+  remember, prefill, sendTo, receive, shortcuts
 } from '../lib/ui.js'
 import { run as runRegex } from '../lib/regex-match.js'
 
@@ -326,8 +327,8 @@ for (const entry of LIBRARY) {
   button.textContent = entry.name
 
   button.addEventListener('click', () => {
-    patternInput.value = entry.pattern
-    input.value = entry.text
+    setField(patternInput, entry.pattern)
+    setField(input, entry.text)
 
     if (entry.flags) {
       for (const box of $$('.flag')) box.checked = entry.flags.includes(box.value)
@@ -340,22 +341,28 @@ for (const entry of LIBRARY) {
 }
 
 $('#sample').addEventListener('click', () => {
-  patternInput.value = SAMPLE_PATTERN
-  input.value = SAMPLE_TEXT
+  setField(patternInput, SAMPLE_PATTERN)
+  setField(input, SAMPLE_TEXT)
   run()
 })
 
 // Chaining substitutions is the usual way a messy paste gets cleaned up.
 $('#apply').addEventListener('click', () => {
   if (!resultOut.value) return
-  input.value = resultOut.value
+  setField(input, resultOut.value)
   run()
 })
 
-dropZone($('#input-pane'), async file => {
-  input.value = await readFileText(file)
+async function load(file) {
+  setField(input, await readFileText(file))
   run()
-})
+}
+
+// Drop and picker both, because a drop is not something a phone or a tablet can
+// do at all — without the button the file route simply is not there on a touch
+// screen.
+dropZone($('#input-pane'), load)
+filePicker($('#open'), load, '.txt,.csv,.log,.json,text/plain')
 
 live([patternInput, input, replacement, ...$$('.flag')], run)
 copyButton($('#copy'), () => resultOut.value)
@@ -363,12 +370,31 @@ pasteButton($('#paste'), input, run)
 clearButton($('#clear'), input, run)
 shortcuts({ run, clear: () => { clearField(input); run() } })
 
+// Only what Replace and Split produce: a list of matches is not text somebody
+// can carry on working with, and `Match` keeps the result box empty.
+sendTo($('#send'), [
+  'list-sorter-randomizer',
+  'text-diff-checker',
+  'json-yaml-formatter',
+  'word-counter'
+], () => resultOut.value, 'regex tester')
+
 remember('devtools.regex', [
   patternInput, replacement, ...$$('.flag'),
   $('#op-match'), $('#op-replace'), $('#op-split')
 ])
 
+// After `remember`, so a link naming a pattern beats the one left in the box
+// last time. A regular expression and the text it is meant to match is exactly
+// the pair that is worth sending somebody rather than describing.
+prefill([
+  patternInput, input, replacement, ...$$('.flag'),
+  $('#op-match'), $('#op-replace'), $('#op-split')
+])
+
 // Seed the box on a first visit, but leave whatever was restored — by the
-// browser on a back navigation, or from storage — alone.
+// browser on a back navigation, from storage, or from the link — alone.
 if (!input.value) input.value = SAMPLE_TEXT
 run()
+
+receive(input, run)

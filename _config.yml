@@ -58,3 +58,9 @@ exclude:
   # file into _site, so without this the Worker's own config would be served
   # at /wrangler.jsonc.
   - wrangler.jsonc
+  # Same again for the container setup. `.dockerignore` keeps these two out of
+  # the image's build context, which is why a containerised build never
+  # published them — but `./start` on a machine with Ruby would, and that is
+  # the build Cloudflare runs.
+  - Dockerfile
+  - compose.yaml

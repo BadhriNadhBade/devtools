@@ -1,6 +1,7 @@
 import {
-  $, $$, live, segment, copyButton, pasteButton, clearButton, clearField, download, status, clearStatus,
-  bytes, encoder, dropZone, filePicker, readFileText, remember, shortcuts
+  $, $$, live, segment, copyButton, pasteButton, clearButton, clearField, setField,
+  download, status, clearStatus, bytes, encoder, dropZone, filePicker, readFileText,
+  remember, prefill, sendTo, receive, shortcuts
 } from '../lib/ui.js'
 import { format as formatJson } from '../lib/json.js'
 import { parse as parseYaml, stringify as stringifyYaml, hasComments } from '../lib/yaml.js'
@@ -117,7 +118,7 @@ function label(key, path) {
   // of a deep document is exactly the work this pane exists to save.
   element.addEventListener('click', event => {
     event.preventDefault()
-    queryInput.value = path
+    setField(queryInput, path)
     run()
   })
 
@@ -348,7 +349,7 @@ goTo.addEventListener('click', () => {
 })
 
 $('#sample').addEventListener('click', () => {
-  input.value = isJson() ? JSON_SAMPLE : YAML_SAMPLE
+  setField(input, isJson() ? JSON_SAMPLE : YAML_SAMPLE)
   run()
 })
 
@@ -369,7 +370,7 @@ $('#collapse-all').addEventListener('click', () => {
 })
 
 async function load(file) {
-  input.value = await readFileText(file)
+  setField(input, await readFileText(file))
   // The extension is a better guess at the format than whatever was last
   // selected, and getting it wrong here means an error message about the
   // wrong language.
@@ -387,8 +388,28 @@ pasteButton($('#paste'), input, run)
 clearButton($('#clear'), input, run)
 shortcuts({ run, clear: () => { clearField(input); clearField(queryInput); run() } })
 
+// A formatted document is most often on its way to another format, to a
+// comparison, or — once a path has pulled one value out of it — to whatever
+// reads that value next.
+sendTo($('#send'), [
+  'json-yaml-converter',
+  'text-diff-checker',
+  'base64-encoder-decoder',
+  'hash-generator'
+], () => output.value, 'formatter')
+
 remember('devtools.formatter', [
   indent, sort, $('#format-json'), $('#format-yaml'), $('#style-pretty'), $('#style-minify')
 ])
 
+// After `remember`, so a link that names a format beats the one left selected
+// last time. The path travels too: linking someone straight to the value you
+// are talking about is most of the point of having a path box.
+prefill([
+  input, queryInput, indent, sort,
+  $('#format-json'), $('#format-yaml'), $('#style-pretty'), $('#style-minify')
+])
+
 run()
+
+receive(input, run)
