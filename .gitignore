@@ -1,4 +1,7 @@
 _site
+# Local state from `wrangler dev`: miniflare's empty stores, temp bundles and
+# a cached copy of Cloudflare's metadata. Regenerated on every run.
+.wrangler
 .sass-cache
 .jekyll-cache
 .jekyll-metadata

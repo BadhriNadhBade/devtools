@@ -1,5 +1,6 @@
 import {
-  $, live, segment, copyButton, pasteButton, clearButton, clearField, status, clearStatus, remember, shortcuts
+  $, live, segment, copyButton, pasteButton, clearButton, clearField, setField,
+  status, clearStatus, remember, prefill, sendTo, receive, shortcuts
 } from '../lib/ui.js'
 
 const input = $('#input')
@@ -258,18 +259,18 @@ function run() {
 
 $('#sample').addEventListener('click', () => {
   if (mode() === 'inspect') {
-    input.value = SAMPLE_URL
+    setField(input, SAMPLE_URL)
   } else if (mode() === 'encode') {
-    input.value = SAMPLE
+    setField(input, SAMPLE)
   } else {
-    input.value = readScope() === 'component' ? encodeURIComponent(SAMPLE) : encodeURI(SAMPLE)
+    setField(input, readScope() === 'component' ? encodeURIComponent(SAMPLE) : encodeURI(SAMPLE))
   }
   run()
 })
 
 // Feeds the result back through, for the layers a redirector or a logger added.
 $('#again').addEventListener('click', () => {
-  input.value = output.value
+  setField(input, output.value)
   run()
 })
 
@@ -290,6 +291,22 @@ pasteButton($('#paste'), input, run)
 clearButton($('#clear'), input, run)
 shortcuts({ run, clear: () => { clearField(input); run() } })
 
+// A decoded parameter is very often one of these three wearing a percent
+// encoding: a JSON blob, a Base64 payload, or a token.
+sendTo($('#send'), [
+  'json-yaml-formatter',
+  'base64-encoder-decoder',
+  'hash-generator'
+], () => output.value, 'URL tools')
+
 remember('devtools.url', [plus, $('#mode-encode'), $('#mode-decode'), $('#mode-inspect'), $('#scope-component'), $('#scope-full')])
 
+// After `remember`, so a link naming a mode beats the one left selected last
+// time. Note that the address being inspected is itself a query parameter here,
+// so it arrives percent-encoded and `URLSearchParams` hands it back decoded —
+// which is exactly the round trip this page is about.
+prefill([input, plus, $('#mode-encode'), $('#mode-decode'), $('#mode-inspect'), $('#scope-component'), $('#scope-full')])
+
 run()
+
+receive(input, run)

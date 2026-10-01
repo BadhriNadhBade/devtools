@@ -1,7 +1,7 @@
 import {
-  $, live, segment, copyButton, pasteButton, clearButton, clearField, status, clearStatus,
-  dropZone, filePicker, readFileBytes, download, bytes, remember, shortcuts,
-  encoder, decoder
+  $, live, segment, copyButton, pasteButton, clearButton, clearField, setField,
+  status, clearStatus, dropZone, filePicker, readFileBytes, download, bytes,
+  remember, prefill, sendTo, receive, shortcuts, encoder, decoder
 } from '../lib/ui.js'
 
 const input = $('#input')
@@ -262,7 +262,7 @@ async function load(loaded) {
 
 $('#sample').addEventListener('click', () => {
   forgetFile()
-  input.value = isEncoding() ? SAMPLE : toBase64(encoder.encode(SAMPLE), urlSafe.checked)
+  setField(input, isEncoding() ? SAMPLE : toBase64(encoder.encode(SAMPLE), urlSafe.checked))
   run()
 })
 
@@ -293,6 +293,22 @@ pasteButton($('#paste'), input, run)
 clearButton($('#clear'), input, () => { forgetFile(); run() })
 shortcuts({ run, clear: () => { clearField(input); forgetFile(); run() } })
 
+// What a decoded payload usually turns out to be. Nothing binary is offered a
+// destination — `decoded` already has Save for that, and no tool here reads
+// bytes out of a textarea.
+sendTo($('#send'), [
+  'json-yaml-formatter',
+  'url-encoder-decoder',
+  'json-yaml-converter',
+  'hash-generator'
+], () => output.value, 'Base64 encoder')
+
 remember('devtools.base64', [urlSafe, wrap, dataUri, $('#mode-encode'), $('#mode-decode')])
 
+// After `remember`, so a link that names a mode beats whichever one was left
+// selected last time.
+prefill([input, urlSafe, wrap, dataUri, $('#mode-encode'), $('#mode-decode')])
+
 run()
+
+receive(input, () => { forgetFile(); run() })

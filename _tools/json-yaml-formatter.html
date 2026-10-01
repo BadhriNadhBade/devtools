@@ -78,6 +78,15 @@ keywords: json yaml yml format formatter lint linter validate validator pretty p
         <span class="tool-label monospace" id="output-size"></span>
         <button type="button" class="tool-button--ghost monospace" id="copy">Copy</button>
         <button type="button" class="tool-button--ghost monospace" id="download">Download</button>
+
+        {% comment %}
+          Empty in the markup and filled by the script, which also unhides it —
+          with JavaScript off there is nowhere for a result to go.
+        {% endcomment %}
+        <label class="tool-send" hidden>
+          <span class="visually-hidden">Send the output to another tool</span>
+          <select id="send"></select>
+        </label>
       </span>
     </div>
     <textarea class="tool-area" id="output" readonly spellcheck="false" aria-labelledby="output-label"></textarea>

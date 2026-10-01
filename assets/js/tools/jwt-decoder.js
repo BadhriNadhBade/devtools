@@ -1,5 +1,6 @@
 import {
-  $, live, copyButton, pasteButton, clearButton, clearField, status, clearStatus, shortcuts, encoder, decoder
+  $, live, copyButton, pasteButton, clearButton, clearField, setField,
+  status, clearStatus, shortcuts, encoder, decoder
 } from '../lib/ui.js'
 
 const input = $('#input')
@@ -324,8 +325,8 @@ async function run() {
 // secret and the token honest about each other: change one and the page stops
 // claiming the other is valid.
 async function sample() {
-  input.value = SAMPLE
-  keyInput.value = SAMPLE_SECRET
+  setField(input, SAMPLE)
+  setField(keyInput, SAMPLE_SECRET)
 
   try {
     const parts = SAMPLE.split('.')
@@ -333,10 +334,10 @@ async function sample() {
       'raw', encoder.encode(SAMPLE_SECRET), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
     )
     const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(`${parts[0]}.${parts[1]}`))
-    input.value = `${parts[0]}.${parts[1]}.${bytesToBase64Url(new Uint8Array(signature))}`
+    setField(input, `${parts[0]}.${parts[1]}.${bytesToBase64Url(new Uint8Array(signature))}`)
   } catch (err) {
     // No Web Crypto: the sample still decodes, it just cannot be verified.
-    keyInput.value = ''
+    clearField(keyInput)
   }
 
   run()
@@ -350,5 +351,11 @@ copyButton($('#copy-header'), () => headerOut.textContent)
 pasteButton($('#paste'), input, run)
 clearButton($('#clear'), [input, keyInput], run)
 shortcuts({ run, clear: () => { clearField(input); clearField(keyInput); run() } })
+
+// No `prefill`, no `sendTo` and no `receive`, for the same reason this page
+// does not call `remember`: a token is a credential and the key beside it is a
+// secret. Neither belongs in a link somebody can paste on, and neither should
+// be left in storage for the next page to pick up. The decoder stays an island
+// on purpose.
 
 run()

@@ -59,6 +59,14 @@ keywords: diff compare text difference changes merge patch unified context colla
   <div class="tool-pane" id="original-pane">
     <div class="tool-pane-head">
       <span class="tool-label monospace" id="original-label">Original</span>
+      {% comment %}
+        Per side rather than shared: with two boxes, one Paste button would have
+        to guess which of them was meant.
+      {% endcomment %}
+      <span class="tool-row">
+        <button type="button" class="tool-button--ghost monospace" id="paste-original">Paste</button>
+        <button type="button" class="tool-button--ghost monospace" id="open-original">Open file</button>
+      </span>
     </div>
     <textarea class="tool-area" id="original" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="original-label" aria-describedby="drop-hint"></textarea>
   </div>
@@ -66,6 +74,10 @@ keywords: diff compare text difference changes merge patch unified context colla
   <div class="tool-pane" id="changed-pane">
     <div class="tool-pane-head">
       <span class="tool-label monospace" id="changed-label">Changed</span>
+      <span class="tool-row">
+        <button type="button" class="tool-button--ghost monospace" id="paste-changed">Paste</button>
+        <button type="button" class="tool-button--ghost monospace" id="open-changed">Open file</button>
+      </span>
     </div>
     <textarea class="tool-area" id="changed" spellcheck="false" autocapitalize="off" autocomplete="off" aria-labelledby="changed-label" aria-describedby="drop-hint"></textarea>
   </div>

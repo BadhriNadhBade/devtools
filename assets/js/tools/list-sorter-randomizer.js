@@ -1,6 +1,7 @@
 import {
-  $, live, segment, copyButton, pasteButton, clearButton, clearField, download, status, clearStatus,
-  dropZone, readFileText, remember, shortcuts
+  $, live, segment, copyButton, pasteButton, clearButton, clearField, setField,
+  download, status, clearStatus, dropZone, filePicker, readFileText,
+  remember, prefill, sendTo, receive, shortcuts
 } from '../lib/ui.js'
 
 const input = $('#input')
@@ -222,8 +223,8 @@ function run() {
 }
 
 $('#sample').addEventListener('click', () => {
-  input.value = SAMPLE
-  second.value = SAMPLE_SECOND
+  setField(input, SAMPLE)
+  setField(second, SAMPLE_SECOND)
   run()
 })
 
@@ -232,10 +233,16 @@ $('#download').addEventListener('click', () => {
   download('list.txt', output.value)
 })
 
-dropZone($('#input-pane'), async file => {
-  input.value = await readFileText(file)
+async function load(file) {
+  setField(input, await readFileText(file))
   run()
-})
+}
+
+// Drop and picker both, because a drop is not something a phone or a tablet can
+// do at all — without the button the file route simply is not there on a touch
+// screen.
+dropZone($('#input-pane'), load)
+filePicker($('#open'), load, '.txt,.csv,.log,text/plain')
 
 live([
   input, second, unique, trim, dropEmpty, ignoreCase, natural,
@@ -248,6 +255,15 @@ pasteButton($('#paste'), input, run)
 clearButton($('#clear'), [input, second], run)
 shortcuts({ run, clear: () => { clearField(input); clearField(second); run() } })
 
+// A sorted, deduplicated list is usually on its way into a comparison or into
+// a pattern that has to match every line of it.
+sendTo($('#send'), [
+  'text-diff-checker',
+  'regex-tester',
+  'json-yaml-converter',
+  'word-counter'
+], () => output.value, 'list sorter')
+
 remember('devtools.list', [
   unique, trim, dropEmpty, ignoreCase, natural, field, delimiter, column,
   invert, compare, prefix, suffix, join, number,
@@ -255,4 +271,15 @@ remember('devtools.list', [
   $('#order-length'), $('#order-reversed'), $('#order-random'), $('#order-none')
 ])
 
+// After `remember`, so a link naming an order beats the one left selected last
+// time. The filter travels with it: half of what this tool does is in that box.
+prefill([
+  input, second, unique, trim, dropEmpty, ignoreCase, natural,
+  field, delimiter, column, filter, invert, compare, prefix, suffix, join, number,
+  $('#order-ascending'), $('#order-descending'), $('#order-numeric'),
+  $('#order-length'), $('#order-reversed'), $('#order-random'), $('#order-none')
+])
+
 run()
+
+receive(input, run)

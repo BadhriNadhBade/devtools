@@ -1,0 +1,18 @@
+# `docker compose up` is the containerised `./start`: same server, same port,
+# same watching, without needing Ruby on the machine. Development only —
+# production is Cloudflare Workers Builds, which never reads this file.
+
+services:
+  site:
+    build:
+      context: .
+      target: serve
+    ports:
+      - "4000:4000"    # the site
+      - "35729:35729"  # livereload, which the dev server injects into pages
+    volumes:
+      # The working tree, so an edit on the host reaches the watcher. The build
+      # output does not come back out: the server writes it to /srv/_site
+      # inside the container, which keeps the working tree clean and, on Linux,
+      # keeps root from owning anything in it.
+      - .:/site

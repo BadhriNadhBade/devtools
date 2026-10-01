@@ -1,4 +1,7 @@
-import { $, live, segment, copyButton, download, status, remember, shortcuts, bytes, encoder } from '../lib/ui.js'
+import {
+  $, live, segment, copyButton, download, status,
+  remember, prefill, sendTo, shortcuts, bytes, encoder
+} from '../lib/ui.js'
 import loremIpsum, { blocks } from '../lib/lorem.js'
 
 const output = $('#output')
@@ -84,7 +87,19 @@ live([count, startWithLorem, flavour, rich], generate)
 copyButton($('#copy'), () => output.value)
 shortcuts({ run: generate })
 
+// Placeholder text is generated to be measured — against a character limit, or
+// against the copy it is standing in for.
+sendTo($('#send'), ['word-counter', 'text-diff-checker'], () => output.value, 'lorem generator')
+
 remember('devtools.lorem', [
+  count, startWithLorem, flavour, rich,
+  $('#units-paragraphs'), $('#units-sentences'), $('#units-words'),
+  $('#format-text'), $('#format-html'), $('#format-markdown')
+])
+
+// After `remember`, so a link naming a count and a format beats whatever was
+// left set last time.
+prefill([
   count, startWithLorem, flavour, rich,
   $('#units-paragraphs'), $('#units-sentences'), $('#units-words'),
   $('#format-text'), $('#format-html'), $('#format-markdown')

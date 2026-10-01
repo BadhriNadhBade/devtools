@@ -743,6 +743,38 @@ select.tool-select {
   font-size: .7em;
 }
 
+// The "send this to another tool" menu. It sits in a pane head beside the copy
+// and download buttons, so it takes the pill surface at their size rather than
+// the full-size `.tool-select` treatment — a control that reads as heavier than
+// the buttons next to it would pull the eye to the least important thing in the
+// row. The label is the hidden element, so the select and its text travel
+// together.
+label.tool-send {
+  display: inline-flex;
+  align-items: center;
+
+  // `inline-flex` above would otherwise win over the attribute, and the menu is
+  // hidden in the markup until the script has somewhere to send things.
+  &[hidden] {
+    display: none;
+  }
+
+  select {
+    @extend %pill;
+
+    font-size: .7em;
+    font-family: var(--monospace);
+    width: auto;
+    max-width: 10em;
+    padding-right: 1.8em;
+
+    &:focus {
+      outline: 2px solid var(--linkColor);
+      outline-offset: 1px;
+    }
+  }
+}
+
 // Segmented control. Borrows the ○ / ● marker treatment from the language
 // switcher on badhrinadh.com so mode toggles look like they belong here.
 .tool-seg {
@@ -1112,10 +1144,13 @@ mark.tool-match {
 
   // iOS zooms the viewport when a focused field's text is under 16px, which
   // leaves the page scrolled sideways and the layout apparently broken. These
-  // are the only fields on the site, and 16px is the threshold.
+  // are the only fields on the site, and 16px is the threshold. The send menu
+  // is deliberately button-sized on a desktop and still has to be in this list:
+  // it is a field, and a finger wants the larger target anyway.
   textarea.tool-area,
   input.tool-text,
   select.tool-select,
+  label.tool-send select,
   .tool-search input.tool-search-input {
     font-size: 16px;
   }

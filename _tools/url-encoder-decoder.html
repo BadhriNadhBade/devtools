@@ -58,6 +58,16 @@ keywords: url uri percent encode decode escape unescape encodeURIComponent query
       <span class="tool-row">
         <button type="button" class="tool-button--ghost monospace" id="again" hidden>Decode again</button>
         <button type="button" class="tool-button--ghost monospace" id="copy">Copy</button>
+
+        {% comment %}
+          A decoded parameter is often JSON or Base64 in disguise. Empty in the
+          markup and filled by the script, which also unhides it — with
+          JavaScript off there is nowhere for a result to go.
+        {% endcomment %}
+        <label class="tool-send" hidden>
+          <span class="visually-hidden">Send the output to another tool</span>
+          <select id="send"></select>
+        </label>
       </span>
     </div>
     <textarea class="tool-area" id="output" readonly spellcheck="false" aria-labelledby="output-label"></textarea>

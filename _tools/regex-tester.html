@@ -31,6 +31,7 @@ keywords: regex regexp regular expression match test pattern groups replace subs
   <label class="tool-check"><input type="checkbox" class="flag" value="s"> <span class="monospace">s</span> dot matches newline</label>
   <label class="tool-check"><input type="checkbox" class="flag" value="u"> <span class="monospace">u</span> unicode</label>
   <button type="button" class="tool-button--ghost monospace" id="sample">Sample</button>
+  <button type="button" class="tool-button--ghost monospace" id="open">Open file</button>
 </div>
 
 {% comment %}
@@ -81,6 +82,15 @@ keywords: regex regexp regular expression match test pattern groups replace subs
     <span class="tool-row">
       <button type="button" class="tool-button--ghost monospace" id="copy">Copy</button>
       <button type="button" class="tool-button--ghost monospace" id="apply">Use as input</button>
+
+      {% comment %}
+        Empty in the markup and filled by the script, which also unhides it —
+        with JavaScript off there is nowhere for a result to go.
+      {% endcomment %}
+      <label class="tool-send" hidden>
+        <span class="visually-hidden">Send the result to another tool</span>
+        <select id="send"></select>
+      </label>
     </span>
   </div>
   <textarea class="tool-area" id="result" readonly spellcheck="false" aria-labelledby="result-label"></textarea>

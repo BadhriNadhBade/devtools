@@ -77,6 +77,17 @@ keywords: base64 b64 encode decode btoa atob url-safe data uri file image binary
         <span class="tool-label monospace" id="output-size"></span>
         <button type="button" class="tool-button--ghost monospace" id="copy">Copy</button>
         <button type="button" class="tool-button--ghost monospace" id="save">Save</button>
+
+        {% comment %}
+          Decoded Base64 is usually something another tool here reads better
+          than this one does — JSON, a URL, a value to checksum. Empty in the
+          markup and filled by the script, which also unhides it: with
+          JavaScript off there is nowhere to send anything.
+        {% endcomment %}
+        <label class="tool-send" hidden>
+          <span class="visually-hidden">Send the output to another tool</span>
+          <select id="send"></select>
+        </label>
       </span>
     </div>
     <textarea class="tool-area" id="output" readonly spellcheck="false" aria-labelledby="output-label"></textarea>

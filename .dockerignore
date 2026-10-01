@@ -1,0 +1,22 @@
+# What never belongs in the build context. `_site` is the big one: it is build
+# output, it is already gitignored, and sending it to the daemon on every build
+# only to have Jekyll overwrite it is pure cost.
+_site
+.jekyll-cache
+.jekyll-metadata
+.sass-cache
+.bundle
+.wrangler
+vendor
+.git
+.github
+node_modules
+
+# The container has no use for either, and touching them should not invalidate
+# a layer.
+Dockerfile
+compose.yaml
+.dockerignore
+README.md
+
+.DS_Store
