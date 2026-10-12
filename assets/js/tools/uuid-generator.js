@@ -13,17 +13,25 @@ const nameFields = $('#name-fields')
 const namespace = $('#namespace')
 const customNamespace = $('#custom-namespace')
 const name = $('#name')
+const secretFields = $('#secret-fields')
+const secretLength = $('#secret-length')
+const secretFormat = $('#secret-format')
 const inspectInput = $('#inspect')
 const inspection = $('#inspection')
+
+if (typeof crypto === 'undefined' || typeof crypto.getRandomValues !== 'function') {
+  throw new Error('crypto.getRandomValues is required — this tool cannot run in an insecure context')
+}
 
 const NIL = '00000000-0000-0000-0000-000000000000'
 
 const HINTS = {
-  4: 'Version 4 is 122 random bits. Use it when you just need something unique and unguessable.',
+  4: 'Version 4 is 122 random bits. Use it when you just need something unique.',
   7: 'Version 7 puts a millisecond timestamp in the leading bits, so UUIDs sort in the order they were created — kinder to database indexes than v4.',
   5: 'Version 5 hashes a namespace and a name, so the same pair always gives the same UUID. Use it when the identifier has to be derivable rather than remembered.',
   ulid: 'A ULID is not a UUID: 48 bits of timestamp and 80 random, written in Crockford base32. Sorts by time, 26 characters, no hyphens.',
-  nil: 'The nil UUID is all zeroes. It stands in for “no value” where a UUID is required.'
+  nil: 'The nil UUID is all zeroes. It stands in for “no value” where a UUID is required.',
+  secret: 'A UUID has only 122 random bits — too few for a secret key. Use 32 or more random bytes for tokens, API keys and signing secrets.'
 }
 
 const HYPHENS = [4, 6, 8, 10]
@@ -47,14 +55,38 @@ function stamp(bytes, version) {
 
 const v4 = () => format(stamp(crypto.getRandomValues(new Uint8Array(16)), 4))
 
+// v7 state: a counter in the sub-millisecond bits so bulk output sorts in
+// creation order even when every UUID lands in the same millisecond.
+let v7LastMs = 0
+let v7Seq = 0
+
 function v7() {
   const bytes = crypto.getRandomValues(new Uint8Array(16))
-  const milliseconds = Date.now()
+  const now = Date.now()
+
+  if (now > v7LastMs) {
+    v7LastMs = now
+    // Random 11-bit start so sequences from different machines don't collide.
+    v7Seq = crypto.getRandomValues(new Uint16Array(1))[0] & 0x7ff
+  } else {
+    v7Seq++
+    // 12-bit counter (0x000–0xfff). If it overflows, nudge the timestamp
+    // forward by one millisecond and reset — the UUIDs stay monotonic.
+    if (v7Seq > 0xfff) {
+      v7LastMs++
+      v7Seq = 0
+    }
+  }
 
   // 48-bit big-endian timestamp across the first six bytes.
   for (let i = 0; i < 6; i++) {
-    bytes[i] = Math.floor(milliseconds / 2 ** (8 * (5 - i))) & 0xff
+    bytes[i] = Math.floor(v7LastMs / 2 ** (8 * (5 - i))) & 0xff
   }
+
+  // seq's high 4 bits go in the low nibble of byte 6 (version nibble is
+  // written by stamp), its low 8 bits go in byte 7.
+  bytes[6] = (bytes[6] & 0xf0) | ((v7Seq >> 8) & 0x0f)
+  bytes[7] = v7Seq & 0xff
 
   return format(stamp(bytes, 7))
 }
@@ -85,21 +117,59 @@ async function v5(namespaceUuid, text) {
 // something else when it is written down.
 const CROCKFORD = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'
 
+// ULID state: when the timestamp hasn't changed, the previous 80-bit random
+// part is incremented by 1 instead of drawing fresh randomness, so ULIDs
+// generated in the same millisecond sort in creation order.
+let ulidLastTime = 0
+let ulidPrev = new Uint8Array(10) // 80 bits = 10 bytes
+
 function ulid() {
-  const time = Date.now()
+  const now = Date.now()
+
+  if (now > ulidLastTime) {
+    ulidLastTime = now
+    crypto.getRandomValues(ulidPrev)
+  } else {
+    // Increment the 80-bit random part by 1, carrying across bytes.
+    let carry = 1
+    for (let i = 9; i >= 0 && carry; i--) {
+      const sum = ulidPrev[i] + carry
+      ulidPrev[i] = sum & 0xff
+      carry = sum >> 8
+    }
+    // If the increment overflows all 80 bits, bump the timestamp.
+    if (carry) {
+      ulidLastTime++
+      crypto.getRandomValues(ulidPrev)
+    }
+  }
+
   let out = ''
 
   // 48 bits of time, ten characters of five bits each.
   for (let i = 9; i >= 0; i--) {
-    out += CROCKFORD[Math.floor(time / 32 ** i) % 32]
+    out += CROCKFORD[Math.floor(ulidLastTime / 32 ** i) % 32]
   }
 
-  // 80 bits of randomness, sixteen more characters. Drawn a byte at a time and
-  // masked rather than taken modulo, so every symbol stays equally likely.
-  const random = crypto.getRandomValues(new Uint8Array(16))
-  for (const byte of random) out += CROCKFORD[byte & 0x1f]
+  // 80 bits from the (possibly incremented) random part.
+  for (const byte of ulidPrev) out += CROCKFORD[byte & 0x1f]
 
   return out
+}
+
+// ---------------------------------------------------------------------------
+// Secret
+// ---------------------------------------------------------------------------
+
+const FORMATS = {
+  hex: bytes => Array.from(bytes, b => b.toString(16).padStart(2, '0')).join(''),
+  base64: bytes => btoa(String.fromCharCode(...bytes)),
+  base64url: bytes => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+function secret(byteLength, fmt) {
+  const bytes = crypto.getRandomValues(new Uint8Array(byteLength))
+  return FORMATS[fmt](bytes)
 }
 
 // ---------------------------------------------------------------------------
@@ -224,9 +294,9 @@ const readVersion = segment('version', () => {
 
 function decorate(values) {
   let out = values
-  // ULIDs have no hyphens to remove and no case to change: Crockford base32 is
-  // upper case by definition, and lowercasing one is a different string.
-  if (readVersion() === 'ulid') return out
+  const version = readVersion()
+  // ULIDs and secrets have no hyphens to remove and no case to change.
+  if (version === 'ulid' || version === 'secret') return out
 
   if (noHyphens.checked) out = out.map(value => value.replace(/-/g, ''))
   if (uppercase.checked) out = out.map(value => value.toUpperCase())
@@ -244,18 +314,24 @@ async function generate() {
   const count = Math.min(500, Math.max(1, parseInt(quantity.value, 10) || 1))
 
   nameFields.hidden = version !== '5'
+  secretFields.hidden = version !== 'secret'
   customNamespace.hidden = namespace.value !== 'custom'
 
   let values
 
   if (version === 'nil') {
     values = Array.from({ length: count }, () => NIL)
+  } else if (version === 'secret') {
+    const byteLength = Math.min(1024, Math.max(1, parseInt(secretLength.value, 10) || 32))
+    const fmt = secretFormat.value
+    values = Array.from({ length: count }, () => secret(byteLength, fmt))
   } else if (version === 'ulid') {
     values = Array.from({ length: count }, ulid)
   } else if (version === '5') {
     const chosen = namespace.value === 'custom' ? customNamespace.value.trim() : namespace.value
 
     if (!HEX.test(chosen)) {
+      if (generation !== latest) return
       output.value = ''
       status('A v5 UUID is hashed against a namespace, which has to be a UUID itself', 'err')
       return
@@ -279,7 +355,7 @@ async function generate() {
 
   output.value = decorate(values).join('\n')
 
-  const noun = version === 'ulid' ? 'ULID' : 'UUID'
+  const noun = version === 'ulid' ? 'ULID' : version === 'secret' ? 'secret' : 'UUID'
   status(`Generated ${count} ${noun}${count === 1 ? '' : 's'}`, 'ok')
 }
 
@@ -287,7 +363,9 @@ $('#generate').addEventListener('click', generate)
 
 $('#download').addEventListener('click', () => {
   if (!output.value) return
-  download(readVersion() === 'ulid' ? 'ulids.txt' : 'uuids.txt', output.value)
+  const v = readVersion()
+  const filename = v === 'ulid' ? 'ulids.txt' : v === 'secret' ? 'secrets.txt' : 'uuids.txt'
+  download(filename, output.value)
 })
 
 // The common case for the inspector is "what is the thing I just made", so it
@@ -299,22 +377,22 @@ $('#inspect-output').addEventListener('click', () => {
   describe()
 })
 
-live([quantity, noHyphens, uppercase, braces, namespace, customNamespace, name], generate)
+live([quantity, noHyphens, uppercase, braces, namespace, customNamespace, name, secretLength, secretFormat], generate)
 live([inspectInput], describe)
 copyButton($('#copy'), () => output.value)
 shortcuts({ run: generate, clear: () => { clearField(inspectInput); describe(); clearStatus() } })
 
 remember('devtools.uuid', [
-  quantity, uppercase, noHyphens, braces, namespace,
-  $('#version-4'), $('#version-7'), $('#version-5'), $('#version-ulid'), $('#version-nil')
+  quantity, uppercase, noHyphens, braces, namespace, secretLength, secretFormat,
+  $('#version-4'), $('#version-7'), $('#version-5'), $('#version-ulid'), $('#version-nil'), $('#version-secret')
 ])
 
 // After `remember`, so a link naming a version beats the one left selected last
 // time. The inspector takes one too: an identifier out of a log line is a
 // reasonable thing to send somebody a link to.
 prefill([
-  quantity, uppercase, noHyphens, braces, namespace, customNamespace, name, inspectInput,
-  $('#version-4'), $('#version-7'), $('#version-5'), $('#version-ulid'), $('#version-nil')
+  quantity, uppercase, noHyphens, braces, namespace, customNamespace, name, secretLength, secretFormat, inspectInput,
+  $('#version-4'), $('#version-7'), $('#version-5'), $('#version-ulid'), $('#version-nil'), $('#version-secret')
 ])
 
 hint.textContent = HINTS[readVersion()]
