@@ -295,6 +295,7 @@ function run() {
   }
 
   if (!canUseWorker) {
+    status('Web Workers are blocked — complex patterns may freeze this tab', 'info')
     try {
       show(runRegex(request))
     } catch (error) {

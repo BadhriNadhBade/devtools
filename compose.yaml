@@ -15,4 +15,4 @@ services:
       # output does not come back out: the server writes it to /srv/_site
       # inside the container, which keeps the working tree clean and, on Linux,
       # keeps root from owning anything in it.
-      - .:/site
+      - .:/site:ro

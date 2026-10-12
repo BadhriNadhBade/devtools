@@ -32,6 +32,9 @@ const suffix = $('#suffix')
 const join = $('#join')
 const number = $('#number')
 
+// How long a regex filter gets before we assume it is backtracking.
+const FILTER_TIMEOUT = 2000
+
 const SAMPLE = [
   'banana', 'Apple', 'cherry', 'apple', 'item 10', 'item 9', 'item 100',
   'date', '', 'elderberry', 'Banana', 'fig'
@@ -78,9 +81,30 @@ function sortable(line) {
   return line.split(separator)[index] ?? ''
 }
 
-// A filter is text unless it is wrapped in slashes, in which case it is a
-// regex — the same convention every editor's search box uses. A regex that does
-// not compile filters nothing rather than emptying the list.
+// Regex filtering runs in a worker so a catastrophically backtracking pattern
+// can be killed. The same generation-id pattern as the regex tester.
+let filterWorker
+let canUseFilterWorker = typeof Worker === 'function'
+let filterDeadline
+let filterGeneration = 0
+
+function ensureFilterWorker() {
+  if (filterWorker) return filterWorker
+
+  filterWorker = new Worker('/assets/js/lib/filter-worker.js')
+
+  filterWorker.addEventListener('error', () => {
+    filterWorker.terminate()
+    filterWorker = null
+    canUseFilterWorker = false
+  })
+
+  return filterWorker
+}
+
+// Returns { regex: true, pattern, flags } when the filter is a regex that
+// needs to be run in the worker, a predicate function for plain-text filters,
+// { error } for a broken regex, or null when the filter is empty.
 function matcher() {
   const pattern = filter.value
   if (!pattern) return null
@@ -88,8 +112,8 @@ function matcher() {
   const regex = pattern.match(/^\/(.*)\/([gimsuy]*)$/)
   if (regex) {
     try {
-      const compiled = new RegExp(regex[1], regex[2].replace(/g/g, ''))
-      return line => compiled.test(line)
+      new RegExp(regex[1], regex[2].replace(/g/g, ''))
+      return { regex: true, pattern: regex[1], flags: regex[2].replace(/g/g, '') }
     } catch (err) {
       return { error: err.message }
     }
@@ -175,28 +199,9 @@ function decorate(lines) {
   })
 }
 
-function run() {
-  const comparing = compare.value !== 'none'
-  secondPane.hidden = !comparing
-  delimiterField.hidden = field.value !== 'column'
-  columnField.hidden = field.value !== 'column'
-
-  let lines = normalize(input.value)
-  inputCount.textContent = countLabel(lines.length)
-
-  const other = normalize(second.value)
-  secondCount.textContent = countLabel(other.length)
-
-  const keep = matcher()
-  if (keep && keep.error) {
-    output.value = ''
-    outputCount.textContent = ''
-    status(`That filter is not a valid regex — ${keep.error}`, 'err')
-    return
-  }
-
-  if (keep) lines = lines.filter(line => keep(line) !== invert.checked)
-
+// The second half of run(), after the filter has been applied. Extracted so
+// both the synchronous and worker-based paths can share it.
+function finish(lines, other, comparing) {
   if (unique.checked) {
     const seen = new Set()
     lines = lines.filter(line => {
@@ -220,6 +225,69 @@ function run() {
   } else {
     clearStatus()
   }
+}
+
+function run() {
+  const comparing = compare.value !== 'none'
+  secondPane.hidden = !comparing
+  delimiterField.hidden = field.value !== 'column'
+  columnField.hidden = field.value !== 'column'
+
+  let lines = normalize(input.value)
+  inputCount.textContent = countLabel(lines.length)
+
+  const other = normalize(second.value)
+  secondCount.textContent = countLabel(other.length)
+
+  const keep = matcher()
+  if (keep && keep.error) {
+    output.value = ''
+    outputCount.textContent = ''
+    status(`That filter is not a valid regex — ${keep.error}`, 'err')
+    return
+  }
+
+  // Regex filters run in a worker so a backtracking pattern can be killed.
+  if (keep && keep.regex) {
+    if (!canUseFilterWorker) {
+      status('Regex filtering is unavailable — Web Workers are blocked in this browser', 'err')
+      finish(lines, other, comparing)
+      return
+    }
+
+    filterGeneration++
+    const id = filterGeneration
+
+    clearTimeout(filterDeadline)
+    filterDeadline = setTimeout(() => {
+      if (filterWorker) filterWorker.terminate()
+      filterWorker = null
+      if (id !== filterGeneration) return
+      status(`That filter didn't finish in ${FILTER_TIMEOUT / 1000}s — it is probably backtracking. Try making it less ambiguous.`, 'err')
+    }, FILTER_TIMEOUT)
+
+    const w = ensureFilterWorker()
+
+    w.onmessage = ({ data }) => {
+      if (data.id !== id) return
+      clearTimeout(filterDeadline)
+
+      if (data.error) {
+        status(`That filter is not a valid regex — ${data.error}`, 'err')
+        return
+      }
+
+      const kept = data.indices.map(i => lines[i])
+      finish(kept, other, comparing)
+    }
+
+    w.postMessage({ id, pattern: keep.pattern, flags: keep.flags, lines, invert: invert.checked })
+    return
+  }
+
+  if (keep) lines = lines.filter(line => keep(line) !== invert.checked)
+
+  finish(lines, other, comparing)
 }
 
 $('#sample').addEventListener('click', () => {

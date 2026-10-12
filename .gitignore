@@ -8,3 +8,17 @@ _site
 .bundle
 vendor
 .DS_Store
+
+# Secrets and credentials
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+secrets.json
+secrets.yml
+
+# Tool-generated state
+.agents/
+node_modules/
