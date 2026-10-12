@@ -39,7 +39,7 @@ tool_categories:
 
 markdown: CommonMarkGhPages
 commonmark:
-  options: ["UNSAFE", "HARDBREAKS"]
+  options: ["HARDBREAKS"]
   extensions: ["strikethrough", "autolink", "table"]
 
 # Jekyll skips anything beginning with an underscore, which would otherwise

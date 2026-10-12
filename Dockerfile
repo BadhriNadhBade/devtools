@@ -10,7 +10,7 @@
 #   docker build --target site \
 #     --output type=local,dest=_site .   write the built site to ./_site
 
-ARG RUBY_VERSION=3.3
+ARG RUBY_VERSION=3.3.7
 
 # ---------------------------------------------------------------------------
 # The gems. On their own in the first stage, with only the two files that

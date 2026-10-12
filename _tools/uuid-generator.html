@@ -21,6 +21,8 @@ keywords: uuid guid v4 v5 v7 ulid random identifier generate namespace inspect d
     <label for="version-ulid">ULID</label>
     <input type="radio" name="version" id="version-nil" value="nil">
     <label for="version-nil">Nil</label>
+    <input type="radio" name="version" id="version-secret" value="secret">
+    <label for="version-secret">Secret</label>
   </div>
 
   <label class="tool-check">
@@ -73,6 +75,22 @@ keywords: uuid guid v4 v5 v7 ulid random identifier generate namespace inspect d
   </label>
 </div>
 
+<div class="tool-subcontrols" id="secret-fields" hidden>
+  <label class="tool-check">
+    Bytes
+    <input type="number" class="tool-text tool-number" id="secret-length" value="32" min="1" max="1024" step="1">
+  </label>
+
+  <label class="tool-check">
+    Format
+    <select class="tool-select" id="secret-format">
+      <option value="hex" selected>Hex</option>
+      <option value="base64">Base64</option>
+      <option value="base64url">Base64url</option>
+    </select>
+  </label>
+</div>
+
 <p class="desc" id="version-hint"></p>
 
 <div class="tool-pane">
@@ -101,5 +119,5 @@ keywords: uuid guid v4 v5 v7 ulid random identifier generate namespace inspect d
 </div>
 
 <p class="tool-note">
-  v4 and v7 are drawn from <code>crypto.getRandomValues</code>. v5 is a SHA-1 of the namespace and name, so it is reproducible rather than random — the same two inputs give the same UUID on any machine. v1 is deliberately not offered: it embeds the generating machine's MAC address, and v7 sorts by time without that.
+  v4, v7 and secrets are drawn from <code>crypto.getRandomValues</code>. v5 is a SHA-1 of the namespace and name, so it is reproducible rather than random — the same two inputs give the same UUID on any machine. v1 is deliberately not offered: it embeds the generating machine's MAC address, and v7 sorts by time without that.
 </p>
