@@ -131,16 +131,9 @@ keywords: base64 b64 encode decode btoa atob
 
 ## Diagrams
 
-Two standalone HTML files in [`docs/`](docs/) — open them in a browser; GitHub
-shows only their source.
+![How the repo fits together](docs/repo-structure.png)
 
-- [`docs/repo-structure.html`](docs/repo-structure.html) — how the repo fits
-  together: source files, the Jekyll build, the Cloudflare Worker, and what
-  loads in the browser.
-- [`docs/repo-usage.html`](docs/repo-usage.html) — from clone to live: run
-  locally, add a tool, check the build, push.
-
-`docs/` is listed under `exclude` in `_config.yml`, so it is not published.
+![From clone to live](docs/repo-usage.png)
 
 ## Layout
 
