@@ -64,3 +64,5 @@ exclude:
   # the build Cloudflare runs.
   - Dockerfile
   - compose.yaml
+  # Repo documentation (architecture and usage diagrams), not site content.
+  - docs
